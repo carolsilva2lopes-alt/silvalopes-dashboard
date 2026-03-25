@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Painel Geral</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #081422; color: #D1D3DA; font-family: 'DM Sans', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+
+  /* SIDEBAR */
+  aside { width: 220px; flex-shrink: 0; background: #060f1c; border-right: 1px solid rgba(209,211,218,0.08); display: flex; flex-direction: column; }
+  .sidebar-logo { padding: 18px 16px; border-bottom: 1px solid rgba(209,211,218,0.08); }
+  .sidebar-logo .name { font-size: 13px; font-weight: 600; color: #D1D3DA; letter-spacing: 0.5px; }
+  .sidebar-logo .sub { font-size: 9px; color: rgba(209,211,218,0.3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+  .sidebar-group-label { font-size: 9px; color: rgba(209,211,218,0.25); letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px 4px; margin-top: 4px; }
+  .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 16px; color: rgba(209,211,218,0.5); cursor: pointer; font-size: 12px; transition: all 0.1s; border-radius: 0; }
+  .sidebar-item:hover { color: #D1D3DA; background: rgba(209,211,218,0.04); }
+  .sidebar-item.active { color: #D1D3DA; background: rgba(209,211,218,0.07); }
+  .sidebar-item svg { opacity: 0.6; }
+  .sidebar-item.active svg { opacity: 1; }
+
+  /* MAIN */
+  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { padding: 0 24px; height: 50px; border-bottom: 1px solid rgba(209,211,218,0.08); display: flex; align-items: center; background: #081422; flex-shrink: 0; }
+  .topbar h1 { font-size: 13px; font-weight: 500; color: rgba(209,211,218,0.7); letter-spacing: 1px; text-transform: uppercase; }
+  .content { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* CARDS */
+  .card { background: #0d1f35; border: 1px solid rgba(209,211,218,0.08); padding: 16px; }
+  .metric-card { background: #0d1f35; border: 1px solid rgba(209,211,218,0.08); padding: 16px; }
+  .metric-card.accent { border-color: rgba(209,211,218,0.2); }
+  .metric-card.green { border-left: 2px solid #5DCAA5; }
+  .metric-card.amber { border-left: 2px solid #E8A838; }
+  .label { font-size: 10px; color: rgba(209,211,218,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .metric-val { font-size: 28px; color: #fff; font-weight: 300; line-height: 1; }
+  .metric-val.med { font-size: 20px; }
+  .metric-sub { font-size: 10px; color: rgba(209,211,218,0.35); margin-top: 4px; }
+  .metric-sub.green { color: #5DCAA5; }
+  .metric-sub.amber { color: #E8A838; }
+
+  /* GRID */
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .grid-5 { display: grid; grid-template-columns: 3fr 2fr; gap: 12px; }
+
+  /* AGENDA SEMANA */
+  .agenda-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
+  .dia-col { background: #081422; border: 1px solid rgba(209,211,218,0.06); padding: 8px; min-height: 90px; }
+  .dia-col.hoje { background: rgba(209,211,218,0.04); border-color: rgba(209,211,218,0.2); }
+  .dia-nome { font-size: 10px; color: rgba(209,211,218,0.4); margin-bottom: 2px; }
+  .dia-col.hoje .dia-nome { color: rgba(209,211,218,0.8); }
+  .dia-num { font-size: 18px; color: rgba(209,211,218,0.4); font-weight: 300; margin-bottom: 6px; }
+  .dia-col.hoje .dia-num { color: #fff; }
+  .evento { font-size: 10px; padding: 2px 5px; border-radius: 2px; color: #fff; margin-bottom: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ev-green { background: #5DCAA5; }
+  .ev-amber { background: #E8A838; }
+  .ev-red { background: #E85D5D; }
+  .ev-blue { background: #5D9CE8; }
+
+  /* ITENS LISTA */
+  .list-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(209,211,218,0.05); }
+  .list-item:last-child { border-bottom: none; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .dot.amber { background: #E8A838; }
+  .dot.red { background: #E85D5D; }
+  .dot.green { background: #5DCAA5; }
+  .item-title { font-size: 12px; color: #fff; }
+  .item-sub { font-size: 10px; color: rgba(209,211,218,0.35); margin-top: 1px; }
+  .item-date { font-size: 10px; color: #E8A838; margin-top: 1px; }
+  .item-date.red { color: #E85D5D; }
+
+  /* ALERTAS */
+  .alerta { padding: 10px 12px; margin-bottom: 6px; border-left: 2px solid; background: #081422; }
+  .alerta.amber { border-color: #E8A838; }
+  .alerta.red { border-color: #E85D5D; }
+  .alerta-tipo { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: rgba(209,211,218,0.4); margin-bottom: 2px; }
+  .alerta-txt { font-size: 11px; color: #fff; }
+  .alerta-sub { font-size: 10px; color: rgba(209,211,218,0.35); }
+
+  /* BADGE */
+  .badge { display: inline-block; font-size: 9px; border: 1px solid; padding: 2px 6px; border-radius: 2px; }
+  .badge.green { color: #5DCAA5; border-color: rgba(93,202,165,0.3); background: rgba(93,202,165,0.07); }
+  .badge.amber { color: #E8A838; border-color: rgba(232,168,56,0.3); background: rgba(232,168,56,0.07); }
+  .badge.gray { color: rgba(209,211,218,0.4); border-color: rgba(209,211,218,0.15); }
+
+  /* FINANCEIRO */
+  .fin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #081422; margin-bottom: 6px; }
+  .fin-label { font-size: 11px; color: rgba(209,211,218,0.5); }
+  .fin-val { font-size: 16px; font-weight: 300; }
+  .fin-val.silver { color: #D1D3DA; }
+  .fin-val.green { color: #5DCAA5; }
+  .fin-val.amber { color: #E8A838; }
+
+  /* SECTION HEADER */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 11px; font-weight: 500; color: rgba(209,211,218,0.7); display: flex; align-items: center; gap: 6px; }
+  .section-link { font-size: 10px; color: rgba(209,211,218,0.35); text-transform: uppercase; letter-spacing: 1px; text-decoration: none; }
+  .section-link:hover { color: #D1D3DA; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside>
+  <div class="sidebar-logo">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:30px;height:30px;border:1px solid rgba(209,211,218,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#D1D3DA">SL</div>
+      <div>
+        <div class="name">Silva Lopes</div>
+        <div class="sub">Advocacia</div>
+      </div>
+    </div>
+  </div>
+  <nav style="padding:8px 0;flex:1">
+    <div class="sidebar-group-label">Principal</div>
+    <div class="sidebar-item active">
+      <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Painel Geral
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      CRM / Comercial
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Clientes
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Processos
+    </div>
+    <div class="sidebar-group-label">Gestão</div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Financeiro
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Prazos
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Audiências
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tarefas
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Agenda
+    </div>
+    <div class="sidebar-group-label">Operacional</div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Documentos
+    </div>
+    <div class="sidebar-item">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Mapa Nacional
+    </div>
+  </nav>
+  <div style="padding:14px 16px;border-top:1px solid rgba(209,211,218,0.08);display:flex;align-items:center;gap:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#0d1f35;border:1px solid rgba(209,211,218,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500">CL</div>
+    <div>
+      <div style="font-size:11px;color:rgba(209,211,218,0.6)">Carol Silva Lopes</div>
+      <div style="font-size:9px;color:rgba(209,211,218,0.25);letter-spacing:0.5px">OAB/GO 56.972</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main>
+  <div class="topbar">
+    <h1>Painel Geral</h1>
+  </div>
+  <div class="content">
+
+    <!-- Linha 1: métricas -->
+    <div class="grid-4">
+      <div class="metric-card accent">
+        <div class="label">Processos ativos</div>
+        <div class="metric-val">12</div>
+        <div class="metric-sub">3 finalizados</div>
+      </div>
+      <div class="metric-card green">
+        <div class="label">Clientes</div>
+        <div class="metric-val">28</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="label">Honorários previstos</div>
+        <div class="metric-val med">R$ 48.500</div>
+        <div class="metric-sub green">R$ 31.200 recebido</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Tarefas pendentes</div>
+        <div class="metric-val" style="color:#E8A838">7</div>
+        <div class="metric-sub">Ver tarefas →</div>
+      </div>
+    </div>
+
+    <!-- Linha 2: Agenda semana -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">📅 Agenda — semana de Março 23</div>
+        <a class="section-link" href="#">Ver agenda completa</a>
+      </div>
+      <div class="agenda-grid">
+        <div class="dia-col">
+          <div class="dia-nome">Dom</div>
+          <div class="dia-num">23</div>
+          <div style="font-size:10px;color:rgba(209,211,218,0.15)">—</div>
+        </div>
+        <div class="dia-col">
+          <div class="dia-nome">Seg</div>
+          <div class="dia-num">24</div>
+          <div class="evento ev-green">09:00 Reunião cliente</div>
+        </div>
+        <div class="dia-col hoje">
+          <div class="dia-nome">Ter</div>
+          <div class="dia-num">25</div>
+          <div class="evento ev-amber">10:00 Prazo petição</div>
+          <div class="evento ev-blue">14:00 Audiência</div>
+        </div>
+        <div class="dia-col">
+          <div class="dia-nome">Qua</div>
+          <div class="dia-num">26</div>
+          <div class="evento ev-green">09:30 Protocolo</div>
+        </div>
+        <div class="dia-col">
+          <div class="dia-nome">Qui</div>
+          <div class="dia-num">27</div>
+          <div class="evento ev-red">15:00 Audiência TJ</div>
+        </div>
+        <div class="dia-col">
+          <div class="dia-nome">Sex</div>
+          <div class="dia-num">28</div>
+          <div style="font-size:10px;color:rgba(209,211,218,0.15)">—</div>
+        </div>
+        <div class="dia-col">
+          <div class="dia-nome">Sáb</div>
+          <div class="dia-num">29</div>
+          <div style="font-size:10px;color:rgba(209,211,218,0.15)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha 3: prazos + audiências + alertas -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">⏰ Prazos (7 dias) <span class="badge amber">3</span></div>
+          <a class="section-link" href="#">Ver todos</a>
+        </div>
+        <div class="list-item">
+          <div class="dot amber"></div>
+          <div>
+            <div class="item-title">Recurso Inominado — TJ/GO</div>
+            <div class="item-sub">Proc. 0012345-67.2024</div>
+            <div class="item-date">26/03/2025</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="dot amber"></div>
+          <div>
+            <div class="item-title">Petição inicial — 2ª Vara Cível</div>
+            <div class="item-sub">Proc. 0098765-12.2024</div>
+            <div class="item-date">28/03/2025</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="dot amber"></div>
+          <div>
+            <div class="item-title">Contrarrazões de apelação</div>
+            <div class="item-sub">—</div>
+            <div class="item-date">30/03/2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">📅 Audiências / 30d <span class="badge" style="color:#E85D5D;border-color:rgba(232,93,93,0.3);background:rgba(232,93,93,0.07)">2</span></div>
+          <a class="section-link" href="#">Ver todas</a>
+        </div>
+        <div class="list-item">
+          <div class="dot red"></div>
+          <div>
+            <div class="item-title">Instrução e Julgamento</div>
+            <div class="item-sub">João Paulo Mendes vs. Empresa X</div>
+            <div class="item-date red">27/03/2025 · 15:00</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="dot red"></div>
+          <div>
+            <div class="item-title">Conciliação</div>
+            <div class="item-sub">Maria Aparecida Santos</div>
+            <div class="item-date red">10/04/2025 · 09:30</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">⚠️ Alertas e notificações</div>
+        </div>
+        <div class="alerta amber">
+          <div class="alerta-tipo">Prazo</div>
+          <div class="alerta-txt">Recurso Inominado — TJ/GO</div>
+          <div class="alerta-sub">Proc. 0012345 · 26/03/2025</div>
+        </div>
+        <div class="alerta red">
+          <div class="alerta-tipo">Audiência</div>
+          <div class="alerta-txt">Instrução e Julgamento</div>
+          <div class="alerta-sub">João Paulo Mendes · 27/03/2025</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha 4: processos recentes + financeiro -->
+    <div class="grid-5">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">📄 Processos recentes</div>
+          <a class="section-link" href="#">Ver todos</a>
+        </div>
+        <div class="list-item" style="align-items:center">
+          <div class="dot green"></div>
+          <div style="flex:1;min-width:0">
+            <div class="item-title">João Paulo Mendes — Indenização por danos morais</div>
+            <div class="item-sub">Direito do Consumidor</div>
+          </div>
+          <span class="badge green">Ativo</span>
+        </div>
+        <div class="list-item" style="align-items:center">
+          <div class="dot green"></div>
+          <div style="flex:1;min-width:0">
+            <div class="item-title">Maria Aparecida Santos — Inventário</div>
+            <div class="item-sub">Direito de Família</div>
+          </div>
+          <span class="badge green">Ativo</span>
+        </div>
+        <div class="list-item" style="align-items:center">
+          <div class="dot green"></div>
+          <div style="flex:1;min-width:0">
+            <div class="item-title">Empresa ABC Ltda — Trabalhista</div>
+            <div class="item-sub">Direito Trabalhista</div>
+          </div>
+          <span class="badge green">Ativo</span>
+        </div>
+        <div class="list-item" style="align-items:center">
+          <div class="dot" style="background:rgba(209,211,218,0.3)"></div>
+          <div style="flex:1;min-width:0">
+            <div class="item-title">Carlos Roberto Lima — Cobrança</div>
+            <div class="item-sub">Direito Civil</div>
+          </div>
+          <span class="badge gray">Finalizado</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">💰 Financeiro — resumo</div>
+        <div class="fin-row">
+          <span class="fin-label">Previsto</span>
+          <span class="fin-val silver">R$ 48.500</span>
+        </div>
+        <div class="fin-row">
+          <span class="fin-label">Recebido</span>
+          <span class="fin-val green">R$ 31.200</span>
+        </div>
+        <div class="fin-row">
+          <span class="fin-label">Pendente</span>
+          <span class="fin-val amber">R$ 17.300</span>
+        </div>
+        <div style="margin-top:12px;padding:8px 12px;border:1px solid rgba(209,211,218,0.15);text-align:center;font-size:11px;color:rgba(209,211,218,0.5);cursor:pointer">
+          Ver financeiro completo →
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</body>
+</html>

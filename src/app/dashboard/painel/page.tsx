@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Clock, Calendar, CheckSquare, DollarSign, Users, FileText, AlertTriangle, CalendarDays } from 'lucide-react'
+import { Clock, Calendar, DollarSign, FileText, AlertTriangle, CalendarDays } from 'lucide-react'
 import Link from 'next/link'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -23,6 +24,8 @@ export default function PainelPage() {
   const [audienciasLista, setAudienciasLista] = useState<any[]>([])
   const [alertas, setAlertas] = useState<any[]>([])
   const [agendaSemana, setAgendaSemana] = useState<any[]>([])
+  const [financeiroMeses, setFinanceiroMeses] = useState<any[]>([])
+  const [processosPorArea, setProcessosPorArea] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const hoje = new Date()
 
@@ -51,6 +54,8 @@ export default function PainelPage() {
         { data: prazosData },
         { data: audienciasData },
         { data: agendaData },
+        { data: finData },
+        { data: procAreaData },
       ] = await Promise.all([
         supabase.from('processos').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
         supabase.from('processos').select('*', { count: 'exact', head: true }).neq('status', 'ativo'),
@@ -63,6 +68,8 @@ export default function PainelPage() {
         supabase.from('prazos').select('*, processo:processos(titulo_interno,numero_processo)').eq('status', 'pendente').order('data').limit(6),
         supabase.from('audiencias').select('*, processo:processos(titulo_interno)').eq('status', 'agendada').gte('data', dHoje).order('data').limit(6),
         supabase.from('agenda').select('*').gte('data', sI).lte('data', sF).order('data').order('hora_inicio'),
+        supabase.from('financeiro').select('valor, pago, tipo, data'),
+        supabase.from('processos').select('area_direito, status'),
       ])
 
       const receitas = financeiroData?.filter(f => f.tipo === 'receita') || []
@@ -74,6 +81,33 @@ export default function PainelPage() {
       setPrazosLista(prazosData || [])
       setAudienciasLista(audienciasData || [])
       setAgendaSemana(agendaData || [])
+
+      // Financeiro por mês (últimos 6 meses)
+      const mesesFin: Record<string, { receita: number; despesa: number }> = {}
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const key = `${MESES[d.getMonth()].slice(0,3)}/${String(d.getFullYear()).slice(2)}`
+        mesesFin[key] = { receita: 0, despesa: 0 }
+      }
+      finData?.forEach((f: any) => {
+        if (!f.data) return
+        const d = new Date(f.data)
+        const key = `${MESES[d.getMonth()].slice(0,3)}/${String(d.getFullYear()).slice(2)}`
+        if (mesesFin[key]) {
+          if (f.tipo === 'receita') mesesFin[key].receita += f.valor || 0
+          else mesesFin[key].despesa += f.valor || 0
+        }
+      })
+      setFinanceiroMeses(Object.entries(mesesFin).map(([mes, v]) => ({ mes, ...v })))
+
+      // Processos por área
+      const areaCount: Record<string, number> = {}
+      procAreaData?.forEach((p: any) => {
+        const area = p.area_direito || 'Outros'
+        areaCount[area] = (areaCount[area] || 0) + 1
+      })
+      setProcessosPorArea(Object.entries(areaCount).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name: name.length > 16 ? name.slice(0, 14) + '…' : name, value })))
 
       // alertas: prazos urgentes hoje/amanhã + audiências nos próximos 2 dias
       const alertasPrazos = (prazosData || []).slice(0, 2).map((p: any) => ({ tipo: 'prazo', texto: p.descricao, sub: p.processo?.titulo_interno || '—', data: p.data, cor: 'border-status-amber' }))
@@ -225,7 +259,56 @@ export default function PainelPage() {
           </div>
         </div>
 
-        {/* Linha 4: processos recentes + financeiro */}
+        {/* Linha 4: gráficos */}
+        <div className="grid grid-cols-2 gap-4">
+
+          {/* Gráfico financeiro por mês */}
+          <div className="card">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign size={12} className="text-brand-silver/50" />
+              <span className="text-brand-silver text-xs font-medium">Financeiro — últimos 6 meses</span>
+            </div>
+            {financeiroMeses.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={financeiroMeses} barGap={3} barCategoryGap="30%">
+                  <XAxis dataKey="mes" tick={{ fill: 'rgba(209,211,218,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'rgba(209,211,218,0.25)', fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ background: '#0d1f35', border: '1px solid rgba(209,211,218,0.15)', borderRadius: 4, fontSize: 11, color: '#D1D3DA' }} formatter={(v: any) => formatCurrency(v)} cursor={{ fill: 'rgba(209,211,218,0.05)' }} />
+                  <Bar dataKey="receita" name="Receita" fill="#5DCAA5" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="despesa" name="Despesa" fill="#E85D5D" radius={[3, 3, 0, 0]} />
+                  <Legend wrapperStyle={{ fontSize: 10, color: 'rgba(209,211,218,0.5)' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-44 text-brand-silver/30 text-xs">Sem dados financeiros ainda.</div>
+            )}
+          </div>
+
+          {/* Gráfico processos por área */}
+          <div className="card">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText size={12} className="text-brand-silver/50" />
+              <span className="text-brand-silver text-xs font-medium">Processos por área do direito</span>
+            </div>
+            {processosPorArea.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={processosPorArea} cx="40%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={3} dataKey="value">
+                    {processosPorArea.map((_, i) => (
+                      <Cell key={i} fill={['#5DCAA5','#5D9CE8','#E8A838','#E85D5D','#A85DE8','#D1D3DA'][i % 6]} />
+                    ))}
+                  </Pie>
+                  <Legend layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 10, color: 'rgba(209,211,218,0.6)', lineHeight: '22px' }} />
+                  <Tooltip contentStyle={{ background: '#0d1f35', border: '1px solid rgba(209,211,218,0.15)', borderRadius: 4, fontSize: 11, color: '#D1D3DA' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-44 text-brand-silver/30 text-xs">Nenhum processo cadastrado ainda.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Linha 5: processos recentes + financeiro resumo */}
         <div className="grid grid-cols-5 gap-4">
           <div className="col-span-3 card">
             <div className="flex items-center justify-between mb-4">
