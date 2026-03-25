@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
 import { formatDate } from '@/lib/utils'
-import { Plus, X, Save, Trash2 } from 'lucide-react'
+import { Plus, X, Save, Trash2, CalendarPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const emptyForm = { titulo: '', descricao: '', tipo: 'profissional', data: '', hora_inicio: '', hora_fim: '', local: '', cliente_id: '', processo_id: '' }
@@ -79,6 +79,25 @@ function AgendaModal({ clientesLista, processosLista, onClose, onSaved }: any) {
   )
 }
 
+function addToGoogleCalendar(ev: any) {
+  const fmt = (date: string, time?: string | null) => {
+    const d = date.replace(/-/g, '')
+    if (time) return `${d}T${time.replace(/:/g, '').slice(0, 6).padEnd(6, '0')}`
+    return d
+  }
+  const start = fmt(ev.data, ev.hora_inicio)
+  const end = ev.hora_fim ? fmt(ev.data, ev.hora_fim) : (ev.hora_inicio ? fmt(ev.data, ev.hora_inicio) : fmt(ev.data))
+  const details = [ev.descricao, ev.processo?.titulo_interno, ev.cliente?.nome].filter(Boolean).join('\n')
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: ev.titulo,
+    dates: `${start}/${end}`,
+    details: details,
+    location: ev.local || '',
+  })
+  window.open(`https://calendar.google.com/calendar/render?${params}`, '_blank')
+}
+
 export default function AgendaPage() {
   const [eventos, setEventos] = useState<any[]>([])
   const [clientes, setClientes] = useState<any[]>([])
@@ -140,6 +159,13 @@ export default function AgendaPage() {
                         )}
                       </div>
                       <span className="badge text-xs text-brand-silver/40 border-brand-silver/15 capitalize">{ev.tipo}</span>
+                      <button
+                        onClick={() => addToGoogleCalendar(ev)}
+                        className="p-1 hover:text-status-blue text-brand-silver/30 transition-colors"
+                        title="Adicionar ao Google Agenda"
+                      >
+                        <CalendarPlus size={12} />
+                      </button>
                       {!ev.isReadonly && (
                         <button onClick={async () => { if (confirm('Excluir?')) { await supabase.from('agenda').delete().eq('id', ev.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/30"><Trash2 size={12} /></button>
                       )}

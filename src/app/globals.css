@@ -7,15 +7,15 @@
 * { box-sizing: border-box; }
 
 body {
-  background-color: #0A182B;
+  background-color: #100828;
   color: #ffffff;
   font-family: 'DM Sans', sans-serif;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #071422; }
-::-webkit-scrollbar-thumb { background: rgba(209,211,218,0.15); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(209,211,218,0.3); }
+::-webkit-scrollbar-track { background: #080418; }
+::-webkit-scrollbar-thumb { background: rgba(180,160,255,0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(180,160,255,0.4); }
 
 @layer components {
   .btn-primary {
@@ -30,131 +30,154 @@ body {
     background: transparent;
     transition: all 0.15s;
     font-family: 'DM Sans', sans-serif;
-    border: 1px solid rgba(209,211,218,0.2);
-    color: #D1D3DA;
+    border: 1px solid rgba(180,160,255,0.25);
+    color: #d4d0e8;
   }
   .btn-primary:hover {
-    background: rgba(209,211,218,0.05);
-    border-color: rgba(209,211,218,0.4);
+    background: rgba(180,160,255,0.08);
+    border-color: rgba(180,160,255,0.5);
+    color: #fff;
   }
   .btn-primary:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 
   .card {
-    background: #111f33;
+    background: #1c0f42;
     padding: 1.25rem;
-    border: 1px solid rgba(209,211,218,0.08);
+    border: 1px solid rgba(180,160,255,0.1);
   }
 
   .card-dark {
-    background: #0A182B;
+    background: #100828;
     padding: 1.25rem;
-    border: 1px solid rgba(209,211,218,0.08);
+    border: 1px solid rgba(180,160,255,0.08);
   }
 
   .input-field {
     width: 100%;
-    background: #0A182B;
+    background: #100828;
     padding: 0.625rem 0.75rem;
     color: white;
     font-size: 0.875rem;
     outline: none;
     transition: border-color 0.15s;
     font-family: 'DM Sans', sans-serif;
-    border: 1px solid rgba(209,211,218,0.15);
+    border: 1px solid rgba(180,160,255,0.18);
+    border-radius: 4px;
   }
-  .input-field:focus { border-color: rgba(209,211,218,0.4); }
-  .input-field::placeholder { color: rgba(209,211,218,0.25); }
+  .input-field:focus {
+    border-color: rgba(180,160,255,0.5);
+    box-shadow: 0 0 0 2px rgba(140,100,255,0.08);
+  }
+  .input-field::placeholder { color: rgba(212,208,232,0.25); }
+  .input-field option { background: #1c0f42; }
 
   .label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.375rem;
     display: block;
     font-family: 'DM Sans', sans-serif;
-    color: rgba(209,211,218,0.4);
+    color: rgba(212,208,232,0.45);
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
     border: 1px solid;
     letter-spacing: 0.025em;
+    border-radius: 3px;
   }
 
   .section-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
-    color: rgba(209,211,218,0.3);
-    border-bottom: 1px solid rgba(209,211,218,0.08);
+    color: rgba(212,208,232,0.35);
+    border-bottom: 1px solid rgba(180,160,255,0.08);
   }
 
   .table-header {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     padding: 0.625rem 0.75rem;
     text-align: left;
     font-weight: 400;
-    color: rgba(209,211,218,0.3);
-    border-bottom: 1px solid rgba(209,211,218,0.08);
+    color: rgba(212,208,232,0.35);
+    border-bottom: 1px solid rgba(180,160,255,0.08);
   }
 
   .table-cell {
     padding: 0.75rem;
     font-size: 0.875rem;
-    border-bottom: 1px solid rgba(209,211,218,0.05);
-    color: rgba(209,211,218,0.75);
+    border-bottom: 1px solid rgba(180,160,255,0.05);
+    color: rgba(212,208,232,0.75);
   }
 
   .table-row { cursor: pointer; transition: background 0.15s; }
-  .table-row:hover td { background: rgba(209,211,218,0.03); }
+  .table-row:hover td { background: rgba(140,100,255,0.05); }
 
   .metric-card {
-    background: #111f33;
-    padding: 1rem;
+    background: #1c0f42;
+    padding: 1rem 1.25rem;
     position: relative;
-    border: 1px solid rgba(209,211,218,0.08);
+    border: 1px solid rgba(180,160,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
   }
   .metric-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: rgba(209,211,218,0.15);
+    background: rgba(180,160,255,0.2);
   }
-  .metric-card.accent::before { background: #D1D3DA; }
-  .metric-card.green::before  { background: #5DCAA5; }
-  .metric-card.amber::before  { background: #EF9F27; }
-  .metric-card.blue::before   { background: #85B7EB; }
-  .metric-card.red::before    { background: #E24B4A; }
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 100%;
+    background: radial-gradient(ellipse at 100% 0%, rgba(140,100,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .metric-card.accent::before { background: linear-gradient(90deg, #a78bfa, #c4b5fd); }
+  .metric-card.accent::after  { background: radial-gradient(ellipse at 100% 0%, rgba(167,139,250,0.15) 0%, transparent 60%); }
+  .metric-card.green::before  { background: linear-gradient(90deg, #00e676, #69f0ae); }
+  .metric-card.green::after   { background: radial-gradient(ellipse at 100% 0%, rgba(0,230,118,0.12) 0%, transparent 60%); }
+  .metric-card.amber::before  { background: linear-gradient(90deg, #ffab00, #ffd740); }
+  .metric-card.amber::after   { background: radial-gradient(ellipse at 100% 0%, rgba(255,171,0,0.12) 0%, transparent 60%); }
+  .metric-card.blue::before   { background: linear-gradient(90deg, #00b8ff, #80d8ff); }
+  .metric-card.blue::after    { background: radial-gradient(ellipse at 100% 0%, rgba(0,184,255,0.12) 0%, transparent 60%); }
+  .metric-card.red::before    { background: linear-gradient(90deg, #ff4d6a, #ff8a9a); }
+  .metric-card.red::after     { background: radial-gradient(ellipse at 100% 0%, rgba(255,77,106,0.12) 0%, transparent 60%); }
 
   .sidebar-item {
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    padding: 0.5rem 0.625rem;
+    padding: 0.5rem 0.75rem;
     cursor: pointer;
     font-size: 0.75rem;
     transition: all 0.15s;
-    color: rgba(209,211,218,0.5);
-    border-left: 2px solid transparent;
+    color: rgba(212,208,232,0.45);
+    border-radius: 4px;
+    margin: 1px 4px;
   }
   .sidebar-item:hover {
-    color: rgba(209,211,218,0.85);
-    background: rgba(209,211,218,0.04);
+    color: rgba(212,208,232,0.9);
+    background: rgba(140,100,255,0.1);
   }
   .sidebar-item.active {
-    color: #D1D3DA;
-    border-left-color: #D1D3DA;
-    background: rgba(209,211,218,0.06);
+    color: #e8e0ff;
+    background: rgba(140,100,255,0.18);
+    box-shadow: inset 2px 0 0 #a78bfa;
   }
 }

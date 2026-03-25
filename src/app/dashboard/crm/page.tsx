@@ -8,6 +8,20 @@ import { formatDate, AREAS_DIREITO } from '@/lib/utils'
 import { Plus, X, Save, Edit2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+const N8N_WEBHOOK = 'https://thirstyhummingbird-n8n.cloudfy.live/workflow/XViLhYJYLrFrlpxt'
+
+async function dispararWebhook(evento: string, lead: Record<string, any>) {
+  try {
+    await fetch(N8N_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ evento, lead, timestamp: new Date().toISOString() }),
+    })
+  } catch {
+    // silencioso — não bloquear o fluxo se o webhook falhar
+  }
+}
+
 const ETAPAS = [
   { key: 'lead', label: 'Lead' },
   { key: 'qualificacao', label: 'Em qualificação' },
@@ -47,7 +61,11 @@ function LeadModal({ editingId, initialForm, onClose, onSaved }: any) {
       error = res.error
     }
     if (error) toast.error('Erro ao salvar: ' + error.message)
-    else { toast.success(editingId ? 'Lead atualizado!' : 'Lead cadastrado!'); onSaved() }
+    else {
+      toast.success(editingId ? 'Lead atualizado!' : 'Lead cadastrado!')
+      await dispararWebhook(editingId ? 'lead_atualizado' : 'novo_lead', form)
+      onSaved()
+    }
     setSaving(false)
   }
 
@@ -120,6 +138,8 @@ export default function CRMPage() {
 
   async function updateEtapa(id: string, etapa: string) {
     await supabase.from('leads').update({ etapa, updated_at: new Date().toISOString() }).eq('id', id)
+    const lead = leads.find(l => l.id === id)
+    if (lead) await dispararWebhook('etapa_alterada', { ...lead, etapa_anterior: lead.etapa, etapa_nova: etapa })
     loadLeads()
   }
 

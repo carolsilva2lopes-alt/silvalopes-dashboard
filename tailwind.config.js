@@ -9,21 +9,21 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark: '#0A182B',
-          darker: '#071422',
-          surface: '#111f33',
-          silver: '#D1D3DA',
-          gray: '#2F2F2F',
+          dark:    '#100828',
+          darker:  '#080418',
+          surface: '#1c0f42',
+          silver:  '#d4d0e8',
+          gray:    '#2a2040',
         },
         status: {
-          green: '#5DCAA5',
-          amber: '#EF9F27',
-          blue: '#85B7EB',
-          red: '#E24B4A',
+          green:  '#00e676',
+          amber:  '#ffab00',
+          blue:   '#00b8ff',
+          red:    '#ff4d6a',
         }
       },
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
+        sans:  ['DM Sans', 'sans-serif'],
         serif: ['Cormorant Garamond', 'serif'],
       },
     },
