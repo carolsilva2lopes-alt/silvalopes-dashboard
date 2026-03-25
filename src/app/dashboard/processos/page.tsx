@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
-import { formatDate, getStatusColor, AREAS_DIREITO, ESTADOS_BR } from '@/lib/utils'
+import { getStatusColor, AREAS_DIREITO, ESTADOS_BR } from '@/lib/utils'
 import { Plus, Search, X, Save, Edit2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -38,6 +38,142 @@ const emptyForm = {
   percentual_parceiro: '',
   data_inicio: '',
   observacoes: '',
+}
+
+const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex flex-col gap-1">
+    <label className="label">{label}</label>
+    {children}
+  </div>
+)
+
+interface ProcessoModalProps {
+  show: boolean
+  editingId: string | null
+  form: any
+  setForm: (f: any) => void
+  clientes: any[]
+  clientesSelecionados: string[]
+  setClientesSelecionados: (ids: string[]) => void
+  saving: boolean
+  onSave: () => void
+  onClose: () => void
+}
+
+function ProcessoModal({
+  show, editingId, form, setForm, clientes,
+  clientesSelecionados, setClientesSelecionados,
+  saving, onSave, onClose,
+}: ProcessoModalProps) {
+  if (!show) return null
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-2xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar processo' : 'Novo processo'}</h2>
+          <button onClick={onClose}><X size={16} className="text-brand-silver/50 hover:text-brand-silver" /></button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Número do processo">
+            <input className="input-field font-mono" value={form.numero_processo} onChange={e => setForm({ ...form, numero_processo: e.target.value })} placeholder="0000000-00.0000.0.00.0000" />
+          </F>
+          <F label="Data de início">
+            <input className="input-field" type="date" value={form.data_inicio} onChange={e => setForm({ ...form, data_inicio: e.target.value })} />
+          </F>
+        </div>
+
+        <div className="mb-3">
+          <F label="Título interno *">
+            <input className="input-field" value={form.titulo_interno} onChange={e => setForm({ ...form, titulo_interno: e.target.value })} placeholder="Nome de referência interno do processo" />
+          </F>
+        </div>
+
+        <div className="mb-3">
+          <label className="label">Clientes vinculados</label>
+          <div className="border border-brand-silver/15 p-3 bg-brand-dark max-h-36 overflow-y-auto flex flex-col gap-1.5">
+            {clientes.map(c => (
+              <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm text-brand-silver/60 hover:text-brand-silver">
+                <input
+                  type="checkbox"
+                  className="accent-brand-silver"
+                  checked={clientesSelecionados.includes(c.id)}
+                  onChange={e => {
+                    if (e.target.checked) setClientesSelecionados([...clientesSelecionados, c.id])
+                    else setClientesSelecionados(clientesSelecionados.filter(id => id !== c.id))
+                  }}
+                />
+                {c.nome}
+              </label>
+            ))}
+            {clientes.length === 0 && <span className="text-brand-silver/30 text-xs">Nenhum cliente cadastrado.</span>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Área do Direito">
+            <select className="input-field" value={form.area_direito} onChange={e => setForm({ ...form, area_direito: e.target.value })}>
+              <option value="">Selecionar...</option>
+              {AREAS_DIREITO.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </F>
+          <F label="Status">
+            <select className="input-field" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+              <option value="ativo">Ativo</option>
+              <option value="finalizado_sentenca">Finalizado — Sentença</option>
+              <option value="finalizado_acordo_judicial">Finalizado — Acordo Judicial</option>
+              <option value="finalizado_acordo_extrajudicial">Finalizado — Acordo Extrajudicial</option>
+            </select>
+          </F>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <F label="Estado">
+            <select className="input-field" value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })}>
+              <option value="">—</option>
+              {ESTADOS_BR.map(est => <option key={est} value={est}>{est}</option>)}
+            </select>
+          </F>
+          <F label="Comarca">
+            <input className="input-field" value={form.comarca} onChange={e => setForm({ ...form, comarca: e.target.value })} />
+          </F>
+          <F label="Vara">
+            <input className="input-field" value={form.vara} onChange={e => setForm({ ...form, vara: e.target.value })} />
+          </F>
+        </div>
+
+        <div className="flex items-center gap-3 mb-3">
+          <input type="checkbox" id="parceria-proc" checked={form.parceria} onChange={e => setForm({ ...form, parceria: e.target.checked })} className="accent-brand-silver" />
+          <label htmlFor="parceria-proc" className="text-brand-silver/60 text-sm cursor-pointer">Processo em parceria</label>
+        </div>
+
+        {form.parceria && (
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <F label="Advogado parceiro">
+              <input className="input-field" value={form.advogado_parceiro} onChange={e => setForm({ ...form, advogado_parceiro: e.target.value })} />
+            </F>
+            <F label="% do parceiro">
+              <input className="input-field" type="number" min="0" max="100" value={form.percentual_parceiro} onChange={e => setForm({ ...form, percentual_parceiro: e.target.value })} />
+            </F>
+          </div>
+        )}
+
+        <F label="Observações">
+          <textarea className="input-field min-h-16 resize-none" value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} />
+        </F>
+
+        <div className="flex gap-3 mt-5">
+          <button className="btn-primary flex-1 justify-center" onClick={onSave} disabled={saving}>
+            <Save size={13} /> {saving ? 'Salvando...' : 'Salvar processo'}
+          </button>
+          <button className="btn-primary" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function ProcessosPage() {
@@ -118,7 +254,6 @@ export default function ProcessosPage() {
         if (error) throw error
         processoId = data.id
       }
-      // Atualizar vínculos com clientes
       if (processoId) {
         await supabase.from('processo_clientes').delete().eq('processo_id', processoId)
         if (clientesSelecionados.length > 0) {
@@ -150,13 +285,6 @@ export default function ProcessosPage() {
     finalizado_acordo_extrajudicial: 'Acordo Extraj.',
   }
 
-  const F = ({ label, children }: any) => (
-    <div className="flex flex-col gap-1">
-      <label className="label">{label}</label>
-      {children}
-    </div>
-  )
-
   return (
     <div className="flex flex-col flex-1 overflow-auto">
       <Topbar title="Processos" />
@@ -170,17 +298,17 @@ export default function ProcessosPage() {
         </div>
 
         <div className="card p-0 overflow-hidden">
-          <table className="w-full" style={{tableLayout:'fixed'}}>
+          <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="border-b border-brand-silver/8">
-                <th className="table-header" style={{width:'14%'}}>Nº Processo</th>
-                <th className="table-header" style={{width:'24%'}}>Título interno</th>
-                <th className="table-header" style={{width:'18%'}}>Clientes</th>
-                <th className="table-header" style={{width:'18%'}}>Área</th>
-                <th className="table-header" style={{width:'7%'}}>Estado</th>
-                <th className="table-header" style={{width:'11%'}}>Status</th>
-                <th className="table-header" style={{width:'8%'}}>Parceria</th>
-                <th className="table-header" style={{width:'6%'}}></th>
+                <th className="table-header" style={{ width: '14%' }}>Nº Processo</th>
+                <th className="table-header" style={{ width: '24%' }}>Título interno</th>
+                <th className="table-header" style={{ width: '18%' }}>Clientes</th>
+                <th className="table-header" style={{ width: '18%' }}>Área</th>
+                <th className="table-header" style={{ width: '7%' }}>Estado</th>
+                <th className="table-header" style={{ width: '11%' }}>Status</th>
+                <th className="table-header" style={{ width: '8%' }}>Parceria</th>
+                <th className="table-header" style={{ width: '6%' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -217,111 +345,18 @@ export default function ProcessosPage() {
           </table>
         </div>
 
-        {showForm && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if(e.target === e.currentTarget) setShowForm(false) }} onMouseDown={e => e.stopPropagation()}>
-            <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-2xl p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar processo' : 'Novo processo'}</h2>
-                <button onClick={() => setShowForm(false)}><X size={16} className="text-brand-silver/50 hover:text-brand-silver" /></button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Número do processo">
-                  <input className="input-field font-mono" value={form.numero_processo} onChange={e => setForm({...form, numero_processo: e.target.value})} placeholder="0000000-00.0000.0.00.0000" />
-                </F>
-                <F label="Data de início">
-                  <input className="input-field" type="date" value={form.data_inicio} onChange={e => setForm({...form, data_inicio: e.target.value})} />
-                </F>
-              </div>
-
-              <div className="mb-3">
-                <F label="Título interno *">
-                  <input className="input-field" value={form.titulo_interno} onChange={e => setForm({...form, titulo_interno: e.target.value})} placeholder="Nome de referência interno do processo" />
-                </F>
-              </div>
-
-              <div className="mb-3">
-                <label className="label">Clientes vinculados</label>
-                <div className="border border-brand-silver/15 p-3 bg-brand-dark max-h-36 overflow-y-auto flex flex-col gap-1.5">
-                  {clientes.map(c => (
-                    <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm text-brand-silver/60 hover:text-brand-silver">
-                      <input
-                        type="checkbox"
-                        className="accent-brand-silver"
-                        checked={clientesSelecionados.includes(c.id)}
-                        onChange={e => {
-                          if (e.target.checked) setClientesSelecionados([...clientesSelecionados, c.id])
-                          else setClientesSelecionados(clientesSelecionados.filter(id => id !== c.id))
-                        }}
-                      />
-                      {c.nome}
-                    </label>
-                  ))}
-                  {clientes.length === 0 && <span className="text-brand-silver/30 text-xs">Nenhum cliente cadastrado.</span>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Área do Direito">
-                  <select className="input-field" value={form.area_direito} onChange={e => setForm({...form, area_direito: e.target.value})}>
-                    <option value="">Selecionar...</option>
-                    {AREAS_DIREITO.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </F>
-                <F label="Status">
-                  <select className="input-field" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
-                    <option value="ativo">Ativo</option>
-                    <option value="finalizado_sentenca">Finalizado — Sentença</option>
-                    <option value="finalizado_acordo_judicial">Finalizado — Acordo Judicial</option>
-                    <option value="finalizado_acordo_extrajudicial">Finalizado — Acordo Extrajudicial</option>
-                  </select>
-                </F>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                <F label="Estado">
-                  <select className="input-field" value={form.estado} onChange={e => setForm({...form, estado: e.target.value})}>
-                    <option value="">—</option>
-                    {ESTADOS_BR.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                </F>
-                <F label="Comarca">
-                  <input className="input-field" value={form.comarca} onChange={e => setForm({...form, comarca: e.target.value})} />
-                </F>
-                <F label="Vara">
-                  <input className="input-field" value={form.vara} onChange={e => setForm({...form, vara: e.target.value})} />
-                </F>
-              </div>
-
-              <div className="flex items-center gap-3 mb-3">
-                <input type="checkbox" id="parceria-proc" checked={form.parceria} onChange={e => setForm({...form, parceria: e.target.checked})} className="accent-brand-silver" />
-                <label htmlFor="parceria-proc" className="text-brand-silver/60 text-sm cursor-pointer">Processo em parceria</label>
-              </div>
-
-              {form.parceria && (
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <F label="Advogado parceiro">
-                    <input className="input-field" value={form.advogado_parceiro} onChange={e => setForm({...form, advogado_parceiro: e.target.value})} />
-                  </F>
-                  <F label="% do parceiro">
-                    <input className="input-field" type="number" min="0" max="100" value={form.percentual_parceiro} onChange={e => setForm({...form, percentual_parceiro: e.target.value})} />
-                  </F>
-                </div>
-              )}
-
-              <F label="Observações">
-                <textarea className="input-field min-h-16 resize-none" value={form.observacoes} onChange={e => setForm({...form, observacoes: e.target.value})} />
-              </F>
-
-              <div className="flex gap-3 mt-5">
-                <button className="btn-primary flex-1 justify-center" onClick={saveProcesso} disabled={saving}>
-                  <Save size={13} /> {saving ? 'Salvando...' : 'Salvar processo'}
-                </button>
-                <button className="btn-primary" onClick={() => setShowForm(false)}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ProcessoModal
+          show={showForm}
+          editingId={editingId}
+          form={form}
+          setForm={setForm}
+          clientes={clientes}
+          clientesSelecionados={clientesSelecionados}
+          setClientesSelecionados={setClientesSelecionados}
+          saving={saving}
+          onSave={saveProcesso}
+          onClose={() => setShowForm(false)}
+        />
       </div>
     </div>
   )

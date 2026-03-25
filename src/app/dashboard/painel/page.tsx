@@ -105,7 +105,7 @@ export default function PainelPage() {
       <div className="p-6 flex flex-col gap-5">
 
         {/* Métricas principais */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="metric-card accent">
             <div className="label">Processos ativos</div>
             <div className="font-serif text-3xl text-white">{loading ? '—' : stats.processos_ativos}</div>
@@ -121,14 +121,9 @@ export default function PainelPage() {
             <div className="font-serif text-2xl text-white">{loading ? '—' : formatCurrency(stats.honorarios_previstos)}</div>
             <div className="text-xs text-status-green mt-1">{formatCurrency(stats.honorarios_recebidos)} recebido</div>
           </div>
-          <div className="metric-card blue">
-            <div className="label">Pendente a receber</div>
-            <div className="font-serif text-2xl text-white">{loading ? '—' : formatCurrency(stats.honorarios_pendentes)}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">A receber</div>
-          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="metric-card">
             <div className="label">Prazos (7 dias)</div>
             <div className={`font-serif text-3xl ${stats.prazos_vencendo > 0 ? 'text-status-amber' : 'text-white'}`}>{loading ? '—' : stats.prazos_vencendo}</div>
@@ -143,11 +138,6 @@ export default function PainelPage() {
             <div className="label">Tarefas pendentes</div>
             <div className={`font-serif text-3xl ${stats.tarefas_pendentes > 0 ? 'text-status-amber' : 'text-white'}`}>{loading ? '—' : stats.tarefas_pendentes}</div>
             <div className="text-xs text-brand-silver/35 mt-1">Em aberto</div>
-          </div>
-          <div className="metric-card">
-            <div className="label">Leads ativos</div>
-            <div className="font-serif text-3xl text-white">{loading ? '—' : stats.total_leads}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">No funil CRM</div>
           </div>
         </div>
 
