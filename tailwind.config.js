@@ -9,22 +9,42 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark:    '#100828',
-          darker:  '#080418',
-          surface: '#1c0f42',
-          silver:  '#d4d0e8',
-          gray:    '#2a2040',
+          dark:    '#0A182B',
+          darker:  '#071422',
+          surface: '#111f33',
+          silver:  '#D1D3DA',
+          gray:    '#1a2d45',
         },
         status: {
-          green:  '#00e676',
-          amber:  '#ffab00',
-          blue:   '#00b8ff',
-          red:    '#ff4d6a',
+          green:  '#5DCAA5',
+          amber:  '#EF9F27',
+          blue:   '#85B7EB',
+          red:    '#E24B4A',
         }
       },
       fontFamily: {
         sans:  ['DM Sans', 'sans-serif'],
         serif: ['Cormorant Garamond', 'serif'],
+      },
+      backgroundImage: {
+        'gradient-card': 'linear-gradient(135deg, #111f33 0%, #0d1b2e 100%)',
+        'gradient-sidebar': 'linear-gradient(180deg, #071422 0%, #091626 100%)',
+      },
+      boxShadow: {
+        'glow-blue':  '0 0 20px rgba(133,183,235,0.12)',
+        'glow-green': '0 0 20px rgba(93,202,165,0.12)',
+        'glow-amber': '0 0 20px rgba(239,159,39,0.12)',
+        'glow-red':   '0 0 20px rgba(226,75,74,0.12)',
+        'card':       '0 4px 24px rgba(7,20,34,0.5)',
+        'card-hover': '0 8px 40px rgba(7,20,34,0.7)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.2s ease-out',
+        'slide-up': 'slideUp 0.25s ease-out',
+      },
+      keyframes: {
+        fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp: { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
       },
     },
   },

@@ -47,10 +47,10 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-brand-darker border-r border-brand-silver/8 flex flex-col min-h-screen">
-      <div className="px-4 py-5 border-b border-brand-silver/8">
+    <aside className="w-56 flex-shrink-0 flex flex-col min-h-screen" style={{background:'linear-gradient(180deg,#071422 0%,#091828 100%)', borderRight:'1px solid rgba(133,183,235,0.07)'}}>
+      <div className="px-4 py-5" style={{borderBottom:'1px solid rgba(133,183,235,0.07)'}}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 flex items-center justify-center border border-brand-silver/30 flex-shrink-0 overflow-hidden">
+          <div className="w-8 h-8 flex items-center justify-center border border-status-blue/30 rounded-lg flex-shrink-0 overflow-hidden" style={{background:'rgba(133,183,235,0.06)'}}>
             <Image
               src="/logo.png"
               alt="Silva Lopes"
@@ -96,14 +96,14 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="px-4 py-4 border-t border-brand-silver/8">
+      <div className="px-4 py-4" style={{borderTop:'1px solid rgba(133,183,235,0.07)'}}>
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-brand-surface border border-brand-silver/20 flex items-center justify-center text-brand-silver text-xs font-medium flex-shrink-0">
-            CL
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-status-blue text-xs font-semibold flex-shrink-0" style={{background:'rgba(133,183,235,0.1)', border:'1px solid rgba(133,183,235,0.2)'}}>
+            AC
           </div>
           <div>
-            <div className="text-brand-silver/60 text-xs">Anna Carolyne Silva Lopes</div>
-            <div className="text-brand-silver/25 leading-tight" style={{fontSize:'9px', letterSpacing:'0.5px'}}>OAB/GO 56.972</div>
+            <div className="text-brand-silver/65 text-xs font-medium">Anna Carolyne</div>
+            <div className="text-status-blue/50 leading-tight" style={{fontSize:'9px', letterSpacing:'0.5px'}}>OAB/GO 56.972</div>
           </div>
         </div>
       </div>

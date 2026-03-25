@@ -134,25 +134,32 @@ export default function PainelPage() {
       <div className="p-6 flex flex-col gap-4">
 
         {/* Linha 1: métricas */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-4">
           <div className="metric-card accent">
-            <div className="label">Processos ativos</div>
-            <div className="font-serif text-3xl text-white">{loading ? '—' : stats.processos_ativos}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">{stats.processos_finalizados} finalizados</div>
+            <div className="kpi-label">Processos ativos</div>
+            <div className="kpi-value">{loading ? '—' : stats.processos_ativos}</div>
+            <div className="text-xs text-brand-silver/35 mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-green inline-block"></span>
+              {stats.processos_finalizados} finalizados
+            </div>
           </div>
           <div className="metric-card green">
-            <div className="label">Clientes</div>
-            <div className="font-serif text-3xl text-white">{loading ? '—' : stats.total_clientes}</div>
+            <div className="kpi-label">Clientes</div>
+            <div className="kpi-value">{loading ? '—' : stats.total_clientes}</div>
+            <div className="text-xs text-status-green/60 mt-2">cadastros ativos</div>
           </div>
           <div className="metric-card amber">
-            <div className="label">Honorários previstos</div>
-            <div className="font-serif text-2xl text-white">{loading ? '—' : formatCurrency(stats.honorarios_previstos)}</div>
-            <div className="text-xs text-status-green mt-1">{formatCurrency(stats.honorarios_recebidos)} recebido</div>
+            <div className="kpi-label">Honorários previstos</div>
+            <div className="kpi-value" style={{fontSize:'1.6rem'}}>{loading ? '—' : formatCurrency(stats.honorarios_previstos)}</div>
+            <div className="text-xs text-status-green mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-green inline-block"></span>
+              {formatCurrency(stats.honorarios_recebidos)} recebido
+            </div>
           </div>
           <div className="metric-card">
-            <div className="label">Tarefas pendentes</div>
-            <div className={`font-serif text-3xl ${stats.tarefas_pendentes > 0 ? 'text-status-amber' : 'text-white'}`}>{loading ? '—' : stats.tarefas_pendentes}</div>
-            <Link href="/dashboard/tarefas" className="text-xs text-brand-silver/35 mt-1 hover:text-brand-silver transition-colors">Ver tarefas →</Link>
+            <div className="kpi-label">Tarefas pendentes</div>
+            <div className={`kpi-value ${stats.tarefas_pendentes > 0 ? 'text-status-amber' : ''}`}>{loading ? '—' : stats.tarefas_pendentes}</div>
+            <Link href="/dashboard/tarefas" className="text-xs text-brand-silver/35 mt-2 hover:text-status-blue transition-colors block">Ver tarefas →</Link>
           </div>
         </div>
 
@@ -165,22 +172,26 @@ export default function PainelPage() {
             </div>
             <Link href="/dashboard/agenda" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver agenda completa</Link>
           </div>
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-2">
             {diasSemana.map((dia, i) => {
               const isHoje = dia.toDateString() === hoje.toDateString()
               const eventos = eventosNoDia(dia)
               return (
-                <div key={i} className={`flex flex-col min-h-20 p-2 border ${isHoje ? 'border-brand-silver/30 bg-brand-silver/5' : 'border-brand-silver/8 bg-brand-dark'}`}>
-                  <div className={`text-xs font-medium mb-1 ${isHoje ? 'text-brand-silver' : 'text-brand-silver/40'}`}>{DIAS[i]}</div>
-                  <div className={`font-serif text-lg mb-1.5 ${isHoje ? 'text-white' : 'text-brand-silver/50'}`}>{dia.getDate()}</div>
-                  <div className="flex flex-col gap-0.5">
+                <div key={i} className={`flex flex-col min-h-24 p-2.5 rounded-lg border transition-all ${
+                  isHoje
+                    ? 'border-status-blue/40 bg-gradient-to-b from-status-blue/10 to-status-blue/3 shadow-glow-blue'
+                    : 'border-brand-silver/7 bg-brand-dark/60 hover:border-brand-silver/15'
+                }`}>
+                  <div className={`text-xs font-medium uppercase tracking-wider mb-1 ${isHoje ? 'text-status-blue' : 'text-brand-silver/35'}`} style={{fontSize:'9px',letterSpacing:'1.5px'}}>{DIAS[i]}</div>
+                  <div className={`font-serif text-xl mb-2 ${isHoje ? 'text-white' : 'text-brand-silver/45'}`}>{dia.getDate()}</div>
+                  <div className="flex flex-col gap-1">
                     {eventos.slice(0, 3).map((ev, j) => (
-                      <div key={j} className={`text-xs px-1 py-0.5 truncate rounded-sm ${tipoColor[ev.tipo] || 'bg-brand-silver/20'} text-white`} title={ev.titulo}>
+                      <div key={j} className={`text-xs px-1.5 py-0.5 truncate rounded-md ${tipoColor[ev.tipo] || 'bg-brand-silver/15'} bg-opacity-20 text-white`} title={ev.titulo} style={{fontSize:'9px'}}>
                         {ev.hora_inicio ? ev.hora_inicio.slice(0,5) + ' ' : ''}{ev.titulo}
                       </div>
                     ))}
-                    {eventos.length > 3 && <div className="text-xs text-brand-silver/30">+{eventos.length - 3}</div>}
-                    {eventos.length === 0 && <div className="text-xs text-brand-silver/15">—</div>}
+                    {eventos.length > 3 && <div className="text-status-blue/60 mt-0.5" style={{fontSize:'9px'}}>+{eventos.length - 3} mais</div>}
+                    {eventos.length === 0 && <div className="text-brand-silver/10" style={{fontSize:'9px'}}>livre</div>}
                   </div>
                 </div>
               )
@@ -273,9 +284,9 @@ export default function PainelPage() {
                 <BarChart data={financeiroMeses} barGap={3} barCategoryGap="30%">
                   <XAxis dataKey="mes" tick={{ fill: 'rgba(209,211,218,0.35)', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: 'rgba(209,211,218,0.25)', fontSize: 9 }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                  <Tooltip contentStyle={{ background: '#0d1f35', border: '1px solid rgba(209,211,218,0.15)', borderRadius: 4, fontSize: 11, color: '#D1D3DA' }} formatter={(v: any) => formatCurrency(v)} cursor={{ fill: 'rgba(209,211,218,0.05)' }} />
-                  <Bar dataKey="receita" name="Receita" fill="#5DCAA5" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="despesa" name="Despesa" fill="#E85D5D" radius={[3, 3, 0, 0]} />
+                  <Tooltip contentStyle={{ background: '#0A182B', border: '1px solid rgba(133,183,235,0.15)', borderRadius: 8, fontSize: 11, color: '#D1D3DA', boxShadow: '0 8px 32px rgba(7,20,34,0.6)' }} formatter={(v: any) => formatCurrency(v)} cursor={{ fill: 'rgba(133,183,235,0.04)' }} />
+                  <Bar dataKey="receita" name="Receita" fill="#5DCAA5" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="despesa" name="Despesa" fill="#E24B4A" radius={[4, 4, 0, 0]} />
                   <Legend wrapperStyle={{ fontSize: 10, color: 'rgba(209,211,218,0.5)' }} />
                 </BarChart>
               </ResponsiveContainer>
@@ -299,7 +310,7 @@ export default function PainelPage() {
                     ))}
                   </Pie>
                   <Legend layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 10, color: 'rgba(209,211,218,0.6)', lineHeight: '22px' }} />
-                  <Tooltip contentStyle={{ background: '#0d1f35', border: '1px solid rgba(209,211,218,0.15)', borderRadius: 4, fontSize: 11, color: '#D1D3DA' }} />
+                  <Tooltip contentStyle={{ background: '#0A182B', border: '1px solid rgba(133,183,235,0.15)', borderRadius: 8, fontSize: 11, color: '#D1D3DA', boxShadow: '0 8px 32px rgba(7,20,34,0.6)' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
