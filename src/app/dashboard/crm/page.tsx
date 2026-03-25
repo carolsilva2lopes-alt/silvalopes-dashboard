@@ -8,7 +8,7 @@ import { formatDate, AREAS_DIREITO } from '@/lib/utils'
 import { Plus, X, Save, Edit2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const N8N_WEBHOOK = 'https://thirstyhummingbird-n8n.cloudfy.live/workflow/XViLhYJYLrFrlpxt'
+const N8N_WEBHOOK = 'https://thirstyhummingbird-n8n.cloudfy.live/webhook/agente_mestre'
 
 async function dispararWebhook(evento: string, lead: Record<string, any>) {
   try {
