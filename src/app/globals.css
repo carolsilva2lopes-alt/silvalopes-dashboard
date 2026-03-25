@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: #0A182B;
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #071422; }
+::-webkit-scrollbar-thumb { background: rgba(209,211,218,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(209,211,218,0.3); }
+
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid rgba(209,211,218,0.2);
+    color: #D1D3DA;
+  }
+  .btn-primary:hover {
+    background: rgba(209,211,218,0.05);
+    border-color: rgba(209,211,218,0.4);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .card {
+    background: #111f33;
+    padding: 1.25rem;
+    border: 1px solid rgba(209,211,218,0.08);
+  }
+
+  .card-dark {
+    background: #0A182B;
+    padding: 1.25rem;
+    border: 1px solid rgba(209,211,218,0.08);
+  }
+
+  .input-field {
+    width: 100%;
+    background: #0A182B;
+    padding: 0.625rem 0.75rem;
+    color: white;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid rgba(209,211,218,0.15);
+  }
+  .input-field:focus { border-color: rgba(209,211,218,0.4); }
+  .input-field::placeholder { color: rgba(209,211,218,0.25); }
+
+  .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.375rem;
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    color: rgba(209,211,218,0.4);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid;
+    letter-spacing: 0.025em;
+  }
+
+  .section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    color: rgba(209,211,218,0.3);
+    border-bottom: 1px solid rgba(209,211,218,0.08);
+  }
+
+  .table-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    font-weight: 400;
+    color: rgba(209,211,218,0.3);
+    border-bottom: 1px solid rgba(209,211,218,0.08);
+  }
+
+  .table-cell {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    border-bottom: 1px solid rgba(209,211,218,0.05);
+    color: rgba(209,211,218,0.75);
+  }
+
+  .table-row { cursor: pointer; transition: background 0.15s; }
+  .table-row:hover td { background: rgba(209,211,218,0.03); }
+
+  .metric-card {
+    background: #111f33;
+    padding: 1rem;
+    position: relative;
+    border: 1px solid rgba(209,211,218,0.08);
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(209,211,218,0.15);
+  }
+  .metric-card.accent::before { background: #D1D3DA; }
+  .metric-card.green::before  { background: #5DCAA5; }
+  .metric-card.amber::before  { background: #EF9F27; }
+  .metric-card.blue::before   { background: #85B7EB; }
+  .metric-card.red::before    { background: #E24B4A; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+    color: rgba(209,211,218,0.5);
+    border-left: 2px solid transparent;
+  }
+  .sidebar-item:hover {
+    color: rgba(209,211,218,0.85);
+    background: rgba(209,211,218,0.04);
+  }
+  .sidebar-item.active {
+    color: #D1D3DA;
+    border-left-color: #D1D3DA;
+    background: rgba(209,211,218,0.06);
+  }
+}
