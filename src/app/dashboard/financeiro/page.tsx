@@ -82,12 +82,65 @@ function ReciboModal({ onClose }: any) {
 
   function gerarRecibo() {
     const num = `REC-${Date.now().toString().slice(-6)}`
-    const texto = `RECIBO Nº ${num}\n\nEu, Carol Silva Lopes, OAB/GO 56.972, recebi de ${recibo.cliente_nome} (CPF/CNPJ: ${recibo.cpf_cnpj}) a quantia de ${formatCurrency(parseFloat(recibo.valor || '0'))} referente a: ${recibo.descricao}\n\nForma de pagamento: ${recibo.tipo_pagamento}\nData: ${formatDate(recibo.data)}\n\n\n___________________________________\nCarol Silva Lopes — OAB/GO 56.972\nSilva Lopes Advocacia & Assessoria Jurídica\n(62) 98197-4318`
-    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `${num}.txt`; a.click()
-    toast.success('Recibo gerado!')
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Recibo ${num}</title><style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Georgia',serif;background:#fff;color:#111;padding:60px;max-width:780px;margin:auto}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:20px;margin-bottom:28px}
+      .escritorio h1{font-size:20px;font-weight:bold;letter-spacing:1px;text-transform:uppercase}
+      .escritorio p{font-size:11px;color:#555;margin-top:3px;line-height:1.6}
+      .num-recibo{text-align:right}
+      .num-recibo .titulo{font-size:30px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:#111}
+      .num-recibo .num{font-size:12px;color:#777;margin-top:4px;font-family:monospace}
+      .corpo{margin:24px 0;line-height:1.9;font-size:13.5px}
+      .cliente-nome{font-size:19px;font-weight:bold;margin:10px 0;border-bottom:1px solid #ddd;padding-bottom:6px}
+      .valor-box{display:inline-block;border:2px solid #111;padding:10px 28px;font-size:22px;font-weight:bold;margin:16px 0;letter-spacing:1px}
+      .descricao{margin:12px 0;font-size:14px}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;padding:16px;background:#f8f8f8;border:1px solid #e8e8e8}
+      .info-item label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#888;display:block;margin-bottom:4px}
+      .info-item span{font-size:14px;font-weight:600}
+      .nota{font-size:11px;color:#666;margin-top:18px;font-style:italic}
+      .assinatura{margin-top:64px;padding-top:16px}
+      .linha-ass{border-top:2px solid #111;width:300px;padding-top:10px;margin-top:52px}
+      .linha-ass .nome{font-weight:bold;font-size:15px}
+      .linha-ass .sub{font-size:11px;color:#555;margin-top:3px}
+      .rodape{margin-top:48px;border-top:1px solid #ddd;padding-top:14px;font-size:10px;color:#aaa;text-align:center;font-family:sans-serif;letter-spacing:0.5px}
+      @media print{body{padding:30px}}
+    </style></head><body>
+      <div class="header">
+        <div class="escritorio">
+          <h1>Silva Lopes Advocacia</h1>
+          <p>Carol Silva Lopes · OAB/GO 56.972<br>contato@silvalopes.adv.br · (62) 98197-4318<br>Silva Lopes Advocacia & Assessoria Jurídica</p>
+        </div>
+        <div class="num-recibo">
+          <div class="titulo">Recibo</div>
+          <div class="num">${num}</div>
+        </div>
+      </div>
+      <div class="corpo">
+        <p>Eu, <strong>Carol Silva Lopes</strong>, OAB/GO nº 56.972, recebi de</p>
+        <div class="cliente-nome">${recibo.cliente_nome || '______________________________'}</div>
+        <p>CPF/CNPJ: <strong>${recibo.cpf_cnpj || '______________________________'}</strong></p>
+        <div class="valor-box">${formatCurrency(parseFloat(recibo.valor || '0'))}</div>
+        <div class="descricao">Referente a: <strong>${recibo.descricao || '______________________________'}</strong></div>
+        <div class="info-grid">
+          <div class="info-item"><label>Forma de pagamento</label><span>${recibo.tipo_pagamento}</span></div>
+          <div class="info-item"><label>Data</label><span>${formatDate(recibo.data)}</span></div>
+        </div>
+        <p class="nota">Por ser verdade, firmo o presente recibo para que produza os devidos efeitos legais.</p>
+        <div class="assinatura">
+          <div class="linha-ass">
+            <div class="nome">Carol Silva Lopes</div>
+            <div class="sub">OAB/GO 56.972</div>
+            <div class="sub">Silva Lopes Advocacia & Assessoria Jurídica</div>
+          </div>
+        </div>
+      </div>
+      <div class="rodape">Silva Lopes Advocacia & Assessoria Jurídica · OAB/GO 56.972 · (62) 98197-4318</div>
+      <script>window.onload=function(){window.print()}</script>
+    </body></html>`
+    const w = window.open('', '_blank', 'width=900,height=700')
+    if (w) { w.document.write(html); w.document.close() }
+    toast.success('Recibo aberto — salve como PDF na impressão!')
     onClose()
   }
 

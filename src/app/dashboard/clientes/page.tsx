@@ -16,10 +16,6 @@ const emptyForm = {
   parceria: false, advogado_parceiro: '', percentual_parceiro: '', observacoes: '',
 }
 
-const F = ({ label, children }: any) => (
-  <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
-)
-
 function ClienteModal({ editingId, initialForm, onClose, onSaved, clientes }: any) {
   const [form, setForm] = useState(initialForm)
   const [saving, setSaving] = useState(false)
@@ -45,68 +41,120 @@ function ClienteModal({ editingId, initialForm, onClose, onSaved, clientes }: an
           <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar cliente' : 'Novo cliente'}</h2>
           <button onClick={onClose}><X size={16} className="text-brand-silver/50 hover:text-brand-silver" /></button>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label="Tipo"><select className="input-field" value={form.tipo} onChange={e => set('tipo', e.target.value)}><option value="pf">Pessoa Física</option><option value="pj">Pessoa Jurídica</option></select></F>
-          <F label="Status"><select className="input-field" value={form.status} onChange={e => set('status', e.target.value)}><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="concluido">Concluído</option></select></F>
+          <div className="flex flex-col gap-1">
+            <label className="label">Tipo</label>
+            <select className="input-field" value={form.tipo} onChange={e => set('tipo', e.target.value)}>
+              <option value="pf">Pessoa Física</option>
+              <option value="pj">Pessoa Jurídica</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">Status</label>
+            <select className="input-field" value={form.status} onChange={e => set('status', e.target.value)}>
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label={form.tipo === 'pj' ? 'Razão Social *' : 'Nome completo *'}>
+          <div className="flex flex-col gap-1">
+            <label className="label">{form.tipo === 'pj' ? 'Razão Social *' : 'Nome completo *'}</label>
             <input className="input-field" value={form.nome} onChange={e => set('nome', e.target.value)} placeholder="Nome completo" />
-          </F>
-          {form.tipo === 'pf' ? (
-            <F label="Data de nascimento"><input className="input-field" type="date" value={form.data_nascimento} onChange={e => set('data_nascimento', e.target.value)} /></F>
-          ) : (
-            <F label="Nome Fantasia"><input className="input-field" value={form.nome_fantasia} onChange={e => set('nome_fantasia', e.target.value)} /></F>
-          )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">{form.tipo === 'pf' ? 'Data de nascimento' : 'Nome Fantasia'}</label>
+            {form.tipo === 'pf'
+              ? <input className="input-field" type="date" value={form.data_nascimento} onChange={e => set('data_nascimento', e.target.value)} />
+              : <input className="input-field" value={form.nome_fantasia} onChange={e => set('nome_fantasia', e.target.value)} />
+            }
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          {form.tipo === 'pf' ? (
-            <F label="CPF"><input className="input-field" value={form.cpf} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" /></F>
-          ) : (
-            <F label="CNPJ"><input className="input-field" value={form.cnpj} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0000-00" /></F>
-          )}
-          <F label="Telefone"><input className="input-field" value={form.telefone} onChange={e => set('telefone', e.target.value)} placeholder="(62) 99999-9999" /></F>
+          <div className="flex flex-col gap-1">
+            <label className="label">{form.tipo === 'pf' ? 'CPF' : 'CNPJ'}</label>
+            {form.tipo === 'pf'
+              ? <input className="input-field" value={form.cpf} onChange={e => set('cpf', e.target.value)} placeholder="000.000.000-00" />
+              : <input className="input-field" value={form.cnpj} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0000-00" />
+            }
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">Telefone</label>
+            <input className="input-field" value={form.telefone} onChange={e => set('telefone', e.target.value)} placeholder="(62) 99999-9999" />
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label="E-mail"><input className="input-field" type="email" value={form.email} onChange={e => set('email', e.target.value)} /></F>
-          <F label="Área do Direito">
+          <div className="flex flex-col gap-1">
+            <label className="label">E-mail</label>
+            <input className="input-field" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">Área do Direito</label>
             <select className="input-field" value={form.area_direito} onChange={e => set('area_direito', e.target.value)}>
               <option value="">Selecionar...</option>
               {AREAS_DIREITO.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
-          </F>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label="Tipo de Honorários">
+          <div className="flex flex-col gap-1">
+            <label className="label">Tipo de Honorários</label>
             <select className="input-field" value={form.tipo_honorario} onChange={e => set('tipo_honorario', e.target.value)}>
               <option value="exito">Honorários de Êxito</option>
               <option value="inicial_exito">Inicial + Êxito</option>
               <option value="outro">Outro</option>
             </select>
-          </F>
-          <F label="Estado">
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">Estado</label>
             <select className="input-field" value={form.estado} onChange={e => set('estado', e.target.value)}>
               <option value="">Selecionar...</option>
               {ESTADOS_BR.map(e => <option key={e} value={e}>{e}</option>)}
             </select>
-          </F>
+          </div>
         </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label="Cidade"><input className="input-field" value={form.cidade} onChange={e => set('cidade', e.target.value)} /></F>
-          <F label="Endereço"><input className="input-field" value={form.endereco} onChange={e => set('endereco', e.target.value)} /></F>
+          <div className="flex flex-col gap-1">
+            <label className="label">Cidade</label>
+            <input className="input-field" value={form.cidade} onChange={e => set('cidade', e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="label">Endereço</label>
+            <input className="input-field" value={form.endereco} onChange={e => set('endereco', e.target.value)} />
+          </div>
         </div>
+
         <div className="flex items-center gap-3 mb-3">
-          <input type="checkbox" id="parceria" checked={form.parceria} onChange={e => set('parceria', e.target.checked)} className="accent-brand-silver" />
-          <label htmlFor="parceria" className="text-brand-silver/60 text-sm cursor-pointer">Caso em parceria</label>
+          <input type="checkbox" id="parceria_check" checked={form.parceria} onChange={e => set('parceria', e.target.checked)} className="accent-brand-silver" />
+          <label htmlFor="parceria_check" className="text-brand-silver/60 text-sm cursor-pointer">Caso em parceria</label>
         </div>
+
         {form.parceria && (
           <div className="grid grid-cols-2 gap-3 mb-3">
-            <F label="Advogado parceiro"><input className="input-field" value={form.advogado_parceiro} onChange={e => set('advogado_parceiro', e.target.value)} /></F>
-            <F label="% do parceiro"><input className="input-field" type="number" min="0" max="100" value={form.percentual_parceiro} onChange={e => set('percentual_parceiro', e.target.value)} /></F>
+            <div className="flex flex-col gap-1">
+              <label className="label">Advogado parceiro</label>
+              <input className="input-field" value={form.advogado_parceiro} onChange={e => set('advogado_parceiro', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="label">% do parceiro</label>
+              <input className="input-field" type="number" min="0" max="100" value={form.percentual_parceiro} onChange={e => set('percentual_parceiro', e.target.value)} />
+            </div>
           </div>
         )}
-        <F label="Observações"><textarea className="input-field min-h-20 resize-none" value={form.observacoes} onChange={e => set('observacoes', e.target.value)} /></F>
-        <div className="flex gap-3 mt-5">
+
+        <div className="flex flex-col gap-1 mb-5">
+          <label className="label">Observações</label>
+          <textarea className="input-field min-h-20 resize-none" value={form.observacoes} onChange={e => set('observacoes', e.target.value)} />
+        </div>
+
+        <div className="flex gap-3">
           <button className="btn-primary flex-1 justify-center" onClick={save} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar cliente'}</button>
           <button className="btn-primary" onClick={onClose}>Cancelar</button>
         </div>

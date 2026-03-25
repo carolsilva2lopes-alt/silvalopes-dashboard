@@ -4,115 +4,103 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
-import { formatCurrency, formatDate, getAreaColor } from '@/lib/utils'
-import { AlertTriangle, TrendingUp, Users, FileText, DollarSign, Clock, Calendar, CheckSquare, MapPin } from 'lucide-react'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { Clock, Calendar, CheckSquare, DollarSign, Users, FileText, AlertTriangle, CalendarDays } from 'lucide-react'
 import Link from 'next/link'
 
-interface Stats {
-  processos_ativos: number
-  processos_finalizados: number
-  total_clientes: number
-  total_leads: number
-  honorarios_previstos: number
-  honorarios_recebidos: number
-  honorarios_pendentes: number
-  prazos_vencendo: number
-  audiencias_proximas: number
-  tarefas_pendentes: number
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+
+const tipoColor: Record<string, string> = {
+  audiencia: 'bg-status-red', prazo: 'bg-status-amber',
+  tarefa: 'bg-status-blue', profissional: 'bg-status-green', pessoal: 'bg-brand-silver/40',
 }
 
 export default function PainelPage() {
-  const [stats, setStats] = useState<Stats>({
-    processos_ativos: 0,
-    processos_finalizados: 0,
-    total_clientes: 0,
-    total_leads: 0,
-    honorarios_previstos: 0,
-    honorarios_recebidos: 0,
-    honorarios_pendentes: 0,
-    prazos_vencendo: 0,
-    audiencias_proximas: 0,
-    tarefas_pendentes: 0,
-  })
+  const [stats, setStats] = useState({ processos_ativos: 0, processos_finalizados: 0, total_clientes: 0, honorarios_previstos: 0, honorarios_recebidos: 0, prazos_vencendo: 0, audiencias_proximas: 0, tarefas_pendentes: 0 })
   const [processos, setProcessos] = useState<any[]>([])
+  const [prazosLista, setPrazosLista] = useState<any[]>([])
+  const [audienciasLista, setAudienciasLista] = useState<any[]>([])
   const [alertas, setAlertas] = useState<any[]>([])
-  const [prazosUrgentes, setPrazosUrgentes] = useState<any[]>([])
-  const [audienciasProximas, setAudienciasProximas] = useState<any[]>([])
-  const [porEstado, setPorEstado] = useState<{uf: string, total: number}[]>([])
+  const [agendaSemana, setAgendaSemana] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const hoje = new Date()
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     try {
+      const dHoje = hoje.toISOString().split('T')[0]
+      const d7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+      const d30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+      // semana: dom até sáb
+      const semanaInicio = new Date(hoje); semanaInicio.setDate(hoje.getDate() - hoje.getDay())
+      const semanaFim = new Date(semanaInicio); semanaFim.setDate(semanaInicio.getDate() + 6)
+      const sI = semanaInicio.toISOString().split('T')[0]
+      const sF = semanaFim.toISOString().split('T')[0]
+
       const [
         { count: processosAtivos },
         { count: processosFinalizados },
         { count: totalClientes },
-        { count: totalLeads },
         { data: financeiroData },
-        { count: prazosVencendo },
+        { count: prazosCount },
         { count: audienciasCount },
         { count: tarefasCount },
         { data: processosRecentes },
         { data: prazosData },
         { data: audienciasData },
-        { data: estadosData },
+        { data: agendaData },
       ] = await Promise.all([
         supabase.from('processos').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
         supabase.from('processos').select('*', { count: 'exact', head: true }).neq('status', 'ativo'),
         supabase.from('clientes').select('*', { count: 'exact', head: true }),
-        supabase.from('leads').select('*', { count: 'exact', head: true }),
         supabase.from('financeiro').select('valor, pago, tipo'),
-        supabase.from('prazos').select('*', { count: 'exact', head: true }).eq('status', 'pendente').lte('data', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
-        supabase.from('audiencias').select('*', { count: 'exact', head: true }).eq('status', 'agendada').gte('data', new Date().toISOString().split('T')[0]).lte('data', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
+        supabase.from('prazos').select('*', { count: 'exact', head: true }).eq('status', 'pendente').lte('data', d7),
+        supabase.from('audiencias').select('*', { count: 'exact', head: true }).eq('status', 'agendada').gte('data', dHoje).lte('data', d30),
         supabase.from('tarefas').select('*', { count: 'exact', head: true }).eq('status', 'pendente'),
-        supabase.from('processos').select('*, processo_clientes(cliente:clientes(nome))').order('created_at', { ascending: false }).limit(5),
-        supabase.from('prazos').select('*, processo:processos(titulo_interno, numero_processo)').eq('status', 'pendente').order('data').limit(5),
-        supabase.from('audiencias').select('*, processo:processos(titulo_interno)').eq('status', 'agendada').gte('data', new Date().toISOString().split('T')[0]).order('data').limit(4),
-        supabase.from('processos').select('estado'),
+        supabase.from('processos').select('id,titulo_interno,status,area_direito').order('created_at', { ascending: false }).limit(5),
+        supabase.from('prazos').select('*, processo:processos(titulo_interno,numero_processo)').eq('status', 'pendente').order('data').limit(6),
+        supabase.from('audiencias').select('*, processo:processos(titulo_interno)').eq('status', 'agendada').gte('data', dHoje).order('data').limit(6),
+        supabase.from('agenda').select('*').gte('data', sI).lte('data', sF).order('data').order('hora_inicio'),
       ])
 
       const receitas = financeiroData?.filter(f => f.tipo === 'receita') || []
-      const previsto = receitas.reduce((sum, f) => sum + (f.valor || 0), 0)
-      const recebido = receitas.filter(f => f.pago).reduce((sum, f) => sum + (f.valor || 0), 0)
+      const previsto = receitas.reduce((s, f) => s + (f.valor || 0), 0)
+      const recebido = receitas.filter(f => f.pago).reduce((s, f) => s + (f.valor || 0), 0)
 
-      setStats({
-        processos_ativos: processosAtivos || 0,
-        processos_finalizados: processosFinalizados || 0,
-        total_clientes: totalClientes || 0,
-        total_leads: totalLeads || 0,
-        honorarios_previstos: previsto,
-        honorarios_recebidos: recebido,
-        honorarios_pendentes: previsto - recebido,
-        prazos_vencendo: prazosVencendo || 0,
-        audiencias_proximas: audienciasCount || 0,
-        tarefas_pendentes: tarefasCount || 0,
-      })
-
+      setStats({ processos_ativos: processosAtivos || 0, processos_finalizados: processosFinalizados || 0, total_clientes: totalClientes || 0, honorarios_previstos: previsto, honorarios_recebidos: recebido, prazos_vencendo: prazosCount || 0, audiencias_proximas: audienciasCount || 0, tarefas_pendentes: tarefasCount || 0 })
       setProcessos(processosRecentes || [])
-      setPrazosUrgentes(prazosData || [])
-      setAudienciasProximas(audienciasData || [])
-      const contagem: Record<string, number> = {}
-      estadosData?.forEach((p: any) => { if (p.estado) contagem[p.estado] = (contagem[p.estado] || 0) + 1 })
-      const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([uf, total]) => ({ uf, total }))
-      setPorEstado(sorted)
-    } catch (error) {
-      console.error('Erro ao carregar painel:', error)
-    } finally {
-      setLoading(false)
-    }
+      setPrazosLista(prazosData || [])
+      setAudienciasLista(audienciasData || [])
+      setAgendaSemana(agendaData || [])
+
+      // alertas: prazos urgentes hoje/amanhã + audiências nos próximos 2 dias
+      const alertasPrazos = (prazosData || []).slice(0, 2).map((p: any) => ({ tipo: 'prazo', texto: p.descricao, sub: p.processo?.titulo_interno || '—', data: p.data, cor: 'border-status-amber' }))
+      const alertasAud = (audienciasData || []).slice(0, 2).map((a: any) => ({ tipo: 'audiencia', texto: a.tipo, sub: a.processo?.titulo_interno || '—', data: a.data, cor: 'border-status-red' }))
+      setAlertas([...alertasPrazos, ...alertasAud])
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
+  }
+
+  // Monta os 7 dias da semana atual
+  const diasSemana = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(hoje); d.setDate(hoje.getDate() - hoje.getDay() + i)
+    return d
+  })
+
+  function eventosNoDia(data: Date) {
+    const key = data.toISOString().split('T')[0]
+    return agendaSemana.filter(e => e.data === key)
   }
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
       <Topbar title="Painel Geral" />
-      <div className="p-6 flex flex-col gap-5">
+      <div className="p-6 flex flex-col gap-4">
 
-        {/* Métricas principais */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Linha 1: métricas */}
+        <div className="grid grid-cols-4 gap-3">
           <div className="metric-card accent">
             <div className="label">Processos ativos</div>
             <div className="font-serif text-3xl text-white">{loading ? '—' : stats.processos_ativos}</div>
@@ -121,169 +109,151 @@ export default function PainelPage() {
           <div className="metric-card green">
             <div className="label">Clientes</div>
             <div className="font-serif text-3xl text-white">{loading ? '—' : stats.total_clientes}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">{stats.total_leads} leads no funil</div>
           </div>
           <div className="metric-card amber">
             <div className="label">Honorários previstos</div>
             <div className="font-serif text-2xl text-white">{loading ? '—' : formatCurrency(stats.honorarios_previstos)}</div>
             <div className="text-xs text-status-green mt-1">{formatCurrency(stats.honorarios_recebidos)} recebido</div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="metric-card">
-            <div className="label">Prazos (7 dias)</div>
-            <div className={`font-serif text-3xl ${stats.prazos_vencendo > 0 ? 'text-status-amber' : 'text-white'}`}>{loading ? '—' : stats.prazos_vencendo}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">Requer atenção</div>
-          </div>
-          <div className="metric-card">
-            <div className="label">Audiências / 30d</div>
-            <div className="font-serif text-3xl text-white">{loading ? '—' : stats.audiencias_proximas}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">Próximas</div>
-          </div>
           <div className="metric-card">
             <div className="label">Tarefas pendentes</div>
             <div className={`font-serif text-3xl ${stats.tarefas_pendentes > 0 ? 'text-status-amber' : 'text-white'}`}>{loading ? '—' : stats.tarefas_pendentes}</div>
-            <div className="text-xs text-brand-silver/35 mt-1">Em aberto</div>
+            <Link href="/dashboard/tarefas" className="text-xs text-brand-silver/35 mt-1 hover:text-brand-silver transition-colors">Ver tarefas →</Link>
           </div>
         </div>
 
-        {/* Linha central */}
-        <div className="grid grid-cols-5 gap-4">
-          {/* Processos recentes */}
-          <div className="col-span-3 card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-brand-silver text-xs font-medium tracking-wide">Processos recentes</div>
-              <Link href="/dashboard/processos" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver todos</Link>
-            </div>
-            {loading ? (
-              <div className="text-brand-silver/30 text-sm py-4 text-center">Carregando...</div>
-            ) : processos.length === 0 ? (
-              <div className="text-brand-silver/30 text-sm py-8 text-center">Nenhum processo cadastrado ainda.</div>
-            ) : (
-              <div className="flex flex-col">
-                {processos.map((proc) => (
-                  <Link key={proc.id} href={`/dashboard/processos/${proc.id}`} className="flex items-center gap-3 py-2.5 border-b border-brand-silver/5 last:border-0 hover:bg-brand-silver/3 transition-colors px-1">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${proc.status === 'ativo' ? 'bg-status-green' : 'bg-brand-silver/30'}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white text-xs truncate">{proc.titulo_interno}</div>
-                      <div className={`text-xs mt-0.5 ${getAreaColor(proc.area_direito)}`}>{proc.area_direito || '—'} {proc.estado ? `· ${proc.estado}` : ''}</div>
-                    </div>
-                    <span className={`badge text-xs ${proc.status === 'ativo' ? 'text-status-green border-status-green/25 bg-status-green/7' : 'text-brand-silver/40 border-brand-silver/15'}`}>
-                      {proc.status === 'ativo' ? 'Ativo' : 'Finalizado'}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Alertas */}
-          <div className="col-span-2 card">
-            <div className="text-brand-silver text-xs font-medium tracking-wide mb-4">Alertas e notificações</div>
-            <div className="flex flex-col gap-2">
-              {prazosUrgentes.slice(0, 2).map((prazo) => (
-                <div key={prazo.id} className="flex gap-2.5 p-2.5 bg-brand-dark border-l-2 border-status-amber">
-                  <div>
-                    <div className="text-white text-xs mb-0.5">Prazo: {prazo.descricao}</div>
-                    <div className="text-brand-silver/35 text-xs">{prazo.processo?.titulo_interno || '—'} · {formatDate(prazo.data)}</div>
-                  </div>
-                </div>
-              ))}
-              {audienciasProximas.slice(0, 2).map((aud) => (
-                <div key={aud.id} className="flex gap-2.5 p-2.5 bg-brand-dark border-l-2 border-status-blue">
-                  <div>
-                    <div className="text-white text-xs mb-0.5">Audiência: {aud.tipo}</div>
-                    <div className="text-brand-silver/35 text-xs">{aud.processo?.titulo_interno || '—'} · {formatDate(aud.data)}</div>
-                  </div>
-                </div>
-              ))}
-              {prazosUrgentes.length === 0 && audienciasProximas.length === 0 && (
-                <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhum alerta no momento.</div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Mapa de atuação */}
+        {/* Linha 2: agenda da semana */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <MapPin size={13} className="text-brand-silver/50" />
-              <div className="text-brand-silver text-xs font-medium tracking-wide">Mapa de Atuação Nacional</div>
+              <CalendarDays size={13} className="text-brand-silver/50" />
+              <span className="text-brand-silver text-xs font-medium tracking-wide">Agenda — semana de {MESES[diasSemana[0].getMonth()]} {diasSemana[0].getDate()}</span>
             </div>
-            <Link href="/dashboard/mapa" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver mapa completo</Link>
+            <Link href="/dashboard/agenda" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver agenda completa</Link>
           </div>
-          {loading ? (
-            <div className="text-brand-silver/30 text-xs py-3 text-center">Carregando...</div>
-          ) : porEstado.length === 0 ? (
-            <div className="text-brand-silver/30 text-xs py-3 text-center">Nenhum processo com estado definido.</div>
-          ) : (
-            <div className="grid grid-cols-6 gap-2">
-              {porEstado.map(({ uf, total }) => {
-                const max = porEstado[0]?.total || 1
-                const pct = Math.round((total / max) * 100)
-                return (
-                  <div key={uf} className="flex flex-col items-center gap-1.5 p-2 bg-brand-dark">
-                    <div className="text-white text-xs font-medium">{uf}</div>
-                    <div className="w-full h-1 bg-brand-silver/10">
-                      <div className="h-full bg-brand-silver/60 transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="text-brand-silver/40 text-xs">{total}</div>
+          <div className="grid grid-cols-7 gap-1.5">
+            {diasSemana.map((dia, i) => {
+              const isHoje = dia.toDateString() === hoje.toDateString()
+              const eventos = eventosNoDia(dia)
+              return (
+                <div key={i} className={`flex flex-col min-h-20 p-2 border ${isHoje ? 'border-brand-silver/30 bg-brand-silver/5' : 'border-brand-silver/8 bg-brand-dark'}`}>
+                  <div className={`text-xs font-medium mb-1 ${isHoje ? 'text-brand-silver' : 'text-brand-silver/40'}`}>{DIAS[i]}</div>
+                  <div className={`font-serif text-lg mb-1.5 ${isHoje ? 'text-white' : 'text-brand-silver/50'}`}>{dia.getDate()}</div>
+                  <div className="flex flex-col gap-0.5">
+                    {eventos.slice(0, 3).map((ev, j) => (
+                      <div key={j} className={`text-xs px-1 py-0.5 truncate rounded-sm ${tipoColor[ev.tipo] || 'bg-brand-silver/20'} text-white`} title={ev.titulo}>
+                        {ev.hora_inicio ? ev.hora_inicio.slice(0,5) + ' ' : ''}{ev.titulo}
+                      </div>
+                    ))}
+                    {eventos.length > 3 && <div className="text-xs text-brand-silver/30">+{eventos.length - 3}</div>}
+                    {eventos.length === 0 && <div className="text-xs text-brand-silver/15">—</div>}
                   </div>
-                )
-              })}
-            </div>
-          )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Linha inferior */}
+        {/* Linha 3: prazos + audiências + alertas */}
         <div className="grid grid-cols-3 gap-4">
-          {/* Prazos urgentes */}
+
+          {/* Prazos próximos */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-brand-silver text-xs font-medium">Prazos próximos</div>
-              <Link href="/dashboard/prazos" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver todos</Link>
+              <div className="flex items-center gap-2">
+                <Clock size={12} className={stats.prazos_vencendo > 0 ? 'text-status-amber' : 'text-brand-silver/40'} />
+                <span className="text-brand-silver text-xs font-medium">Prazos (7 dias)</span>
+                {stats.prazos_vencendo > 0 && <span className="badge text-status-amber border-status-amber/25 bg-status-amber/7 text-xs">{stats.prazos_vencendo}</span>}
+              </div>
+              <Link href="/dashboard/prazos" className="text-brand-silver/35 text-xs hover:text-brand-silver">Ver todos</Link>
             </div>
-            {prazosUrgentes.length === 0 ? (
-              <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhum prazo urgente.</div>
-            ) : (
-              prazosUrgentes.map((prazo) => (
-                <div key={prazo.id} className="flex items-start gap-2.5 py-2 border-b border-brand-silver/5 last:border-0">
-                  <Clock size={11} className="text-status-amber mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-xs truncate">{prazo.descricao}</div>
-                    <div className="text-brand-silver/35 text-xs">{prazo.processo?.numero_processo || '—'} · {formatDate(prazo.data)}</div>
-                  </div>
+            {loading ? <div className="text-brand-silver/30 text-xs py-4 text-center">...</div>
+            : prazosLista.length === 0 ? <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhum prazo urgente.</div>
+            : prazosLista.map(p => (
+              <div key={p.id} className="flex items-start gap-2 py-2 border-b border-brand-silver/5 last:border-0">
+                <div className="w-1 h-1 rounded-full bg-status-amber mt-1.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-xs truncate">{p.descricao}</div>
+                  <div className="text-brand-silver/35 text-xs">{p.processo?.numero_processo || '—'}</div>
+                  <div className="text-status-amber text-xs">{formatDate(p.data)}</div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
 
-          {/* Audiências */}
+          {/* Audiências próximas */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-brand-silver text-xs font-medium">Próximas audiências</div>
-              <Link href="/dashboard/audiencias" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver todas</Link>
+              <div className="flex items-center gap-2">
+                <Calendar size={12} className={stats.audiencias_proximas > 0 ? 'text-status-red' : 'text-brand-silver/40'} />
+                <span className="text-brand-silver text-xs font-medium">Audiências / 30d</span>
+                {stats.audiencias_proximas > 0 && <span className="badge text-status-red border-status-red/25 bg-status-red/7 text-xs">{stats.audiencias_proximas}</span>}
+              </div>
+              <Link href="/dashboard/audiencias" className="text-brand-silver/35 text-xs hover:text-brand-silver">Ver todas</Link>
             </div>
-            {audienciasProximas.length === 0 ? (
-              <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhuma audiência próxima.</div>
-            ) : (
-              audienciasProximas.map((aud) => (
-                <div key={aud.id} className="flex items-start gap-2.5 py-2 border-b border-brand-silver/5 last:border-0">
-                  <Calendar size={11} className="text-status-red mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-xs truncate">{aud.tipo}</div>
-                    <div className="text-brand-silver/35 text-xs">{formatDate(aud.data)} {aud.hora ? `· ${aud.hora.slice(0,5)}` : ''}</div>
-                  </div>
+            {loading ? <div className="text-brand-silver/30 text-xs py-4 text-center">...</div>
+            : audienciasLista.length === 0 ? <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhuma audiência próxima.</div>
+            : audienciasLista.map(a => (
+              <div key={a.id} className="flex items-start gap-2 py-2 border-b border-brand-silver/5 last:border-0">
+                <div className="w-1 h-1 rounded-full bg-status-red mt-1.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-xs truncate">{a.tipo}</div>
+                  <div className="text-brand-silver/35 text-xs truncate">{a.processo?.titulo_interno || '—'}</div>
+                  <div className="text-status-red text-xs">{formatDate(a.data)}{a.hora ? ` · ${a.hora.slice(0,5)}` : ''}</div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
 
-          {/* Financeiro resumo */}
+          {/* Alertas */}
           <div className="card">
-            <div className="text-brand-silver text-xs font-medium mb-3">Financeiro — resumo</div>
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={12} className="text-status-amber" />
+              <span className="text-brand-silver text-xs font-medium">Alertas e notificações</span>
+            </div>
+            {alertas.length === 0 && !loading
+              ? <div className="text-brand-silver/30 text-xs py-4 text-center">Nenhum alerta no momento.</div>
+              : alertas.map((al, i) => (
+                <div key={i} className={`flex gap-2.5 p-2.5 mb-2 bg-brand-dark border-l-2 ${al.cor}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-brand-silver/50 text-xs uppercase tracking-wider mb-0.5">{al.tipo}</div>
+                    <div className="text-white text-xs truncate">{al.texto}</div>
+                    <div className="text-brand-silver/35 text-xs truncate">{al.sub} · {formatDate(al.data)}</div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Linha 4: processos recentes + financeiro */}
+        <div className="grid grid-cols-5 gap-4">
+          <div className="col-span-3 card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileText size={12} className="text-brand-silver/50" />
+                <span className="text-brand-silver text-xs font-medium tracking-wide">Processos recentes</span>
+              </div>
+              <Link href="/dashboard/processos" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver todos</Link>
+            </div>
+            {loading ? <div className="text-brand-silver/30 text-sm py-4 text-center">Carregando...</div>
+            : processos.length === 0 ? <div className="text-brand-silver/30 text-sm py-8 text-center">Nenhum processo ainda.</div>
+            : processos.map(p => (
+              <Link key={p.id} href={`/dashboard/processos/${p.id}`} className="flex items-center gap-3 py-2.5 border-b border-brand-silver/5 last:border-0 hover:bg-brand-silver/3 transition-colors px-1">
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${p.status === 'ativo' ? 'bg-status-green' : 'bg-brand-silver/30'}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-xs truncate">{p.titulo_interno}</div>
+                  <div className="text-brand-silver/40 text-xs">{p.area_direito || '—'}</div>
+                </div>
+                <span className={`badge text-xs ${p.status === 'ativo' ? 'text-status-green border-status-green/25 bg-status-green/7' : 'text-brand-silver/40 border-brand-silver/15'}`}>{p.status === 'ativo' ? 'Ativo' : 'Finalizado'}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="col-span-2 card">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign size={12} className="text-brand-silver/50" />
+              <span className="text-brand-silver text-xs font-medium">Financeiro — resumo</span>
+            </div>
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center p-2.5 bg-brand-dark">
                 <span className="text-brand-silver/50 text-xs">Previsto</span>
@@ -295,12 +265,10 @@ export default function PainelPage() {
               </div>
               <div className="flex justify-between items-center p-2.5 bg-brand-dark">
                 <span className="text-brand-silver/50 text-xs">Pendente</span>
-                <span className="font-serif text-base text-status-amber">{formatCurrency(stats.honorarios_pendentes)}</span>
+                <span className="font-serif text-base text-status-amber">{formatCurrency(stats.honorarios_previstos - stats.honorarios_recebidos)}</span>
               </div>
             </div>
-            <Link href="/dashboard/financeiro" className="btn-primary w-full justify-center mt-3 text-xs">
-              Ver financeiro completo
-            </Link>
+            <Link href="/dashboard/financeiro" className="btn-primary w-full justify-center mt-4 text-xs">Ver financeiro completo</Link>
           </div>
         </div>
 
