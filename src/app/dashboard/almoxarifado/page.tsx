@@ -131,10 +131,10 @@ export default function AlmoxarifadoPage() {
       <Topbar title="Almoxarifado" />
       <div className="p-6">
         <div className="grid grid-cols-4 gap-3 mb-5">
-          <div className="metric-card"><div className="label">Total itens</div><div className="font-serif text-3xl text-white">{stats.total}</div></div>
-          <div className="metric-card green"><div className="label">Em estoque</div><div className="font-serif text-3xl text-white">{stats.ok}</div></div>
-          <div className="metric-card amber"><div className="label">Estoque baixo</div><div className="font-serif text-3xl text-white">{stats.baixo}</div></div>
-          <div className="metric-card red"><div className="label">Esgotados</div><div className="font-serif text-3xl text-white">{stats.zerado}</div></div>
+          <div className="metric-card"><div className="kpi-label">Total itens</div><div className="kpi-value">{stats.total}</div></div>
+          <div className="metric-card green"><div className="kpi-label">Em estoque</div><div className="kpi-value">{stats.ok}</div></div>
+          <div className="metric-card amber"><div className="kpi-label">Estoque baixo</div><div className="kpi-value">{stats.baixo}</div></div>
+          <div className="metric-card red"><div className="kpi-label">Esgotados</div><div className="kpi-value">{stats.zerado}</div></div>
         </div>
 
         <div className="flex justify-end mb-5">

@@ -278,10 +278,10 @@ export default function FinanceiroPage() {
       <Topbar title="Financeiro" />
       <div className="p-6">
         <div className="grid grid-cols-4 gap-3 mb-5">
-          <div className="metric-card accent"><div className="label">Honorários previstos</div><div className="font-serif text-2xl text-white">{formatCurrency(previsto)}</div></div>
-          <div className="metric-card green"><div className="label">Recebido</div><div className="font-serif text-2xl text-white">{formatCurrency(recebido)}</div></div>
-          <div className="metric-card amber"><div className="label">Pendente</div><div className="font-serif text-2xl text-white">{formatCurrency(pendente)}</div></div>
-          <div className="metric-card red"><div className="label">Repasse parceria</div><div className="font-serif text-2xl text-white">{formatCurrency(repasses)}</div><div className="text-xs text-status-red/70 mt-1">Pendente de pagamento</div></div>
+          <div className="metric-card accent"><div className="kpi-label">Honorários previstos</div><div className="kpi-value" style={{fontSize:'1.6rem'}}>{formatCurrency(previsto)}</div></div>
+          <div className="metric-card green"><div className="kpi-label">Recebido</div><div className="kpi-value" style={{fontSize:'1.6rem'}}>{formatCurrency(recebido)}</div></div>
+          <div className="metric-card amber"><div className="kpi-label">Pendente</div><div className="kpi-value" style={{fontSize:'1.6rem'}}>{formatCurrency(pendente)}</div></div>
+          <div className="metric-card red"><div className="kpi-label">Repasse parceria</div><div className="kpi-value" style={{fontSize:'1.6rem'}}>{formatCurrency(repasses)}</div><div className="text-xs text-status-red/70 mt-1">Pendente de pagamento</div></div>
         </div>
 
         <div className="flex gap-3 mb-5">

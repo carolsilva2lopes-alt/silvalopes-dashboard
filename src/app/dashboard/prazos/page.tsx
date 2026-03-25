@@ -135,9 +135,9 @@ export default function PrazosPage() {
       <Topbar title="Prazos Processuais" />
       <div className="p-6">
         <div className="grid grid-cols-3 gap-3 mb-5">
-          <div className="metric-card amber"><div className="label">Vencendo (7 dias)</div><div className="font-serif text-3xl text-white">{stats.vencendo}</div></div>
-          <div className="metric-card"><div className="label">Próximos</div><div className="font-serif text-3xl text-white">{stats.proximos}</div></div>
-          <div className="metric-card green"><div className="label">Concluídos</div><div className="font-serif text-3xl text-white">{stats.concluidos}</div></div>
+          <div className="metric-card amber"><div className="kpi-label">Vencendo (7 dias)</div><div className="kpi-value">{stats.vencendo}</div></div>
+          <div className="metric-card"><div className="kpi-label">Próximos</div><div className="kpi-value">{stats.proximos}</div></div>
+          <div className="metric-card green"><div className="kpi-label">Concluídos</div><div className="kpi-value">{stats.concluidos}</div></div>
         </div>
         <div className="flex items-center gap-3 mb-5">
           <div className="flex gap-2">

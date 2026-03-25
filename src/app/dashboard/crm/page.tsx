@@ -148,10 +148,10 @@ export default function CRMPage() {
       <Topbar title="CRM / Comercial" />
       <div className="p-6">
         <div className="grid grid-cols-4 gap-3 mb-5">
-          <div className="metric-card"><div className="label">Total leads</div><div className="font-serif text-3xl text-white">{stats.total}</div></div>
-          <div className="metric-card green"><div className="label">Fechados</div><div className="font-serif text-3xl text-white">{stats.fechados}</div><div className="text-xs text-status-green mt-1">{stats.total ? Math.round(stats.fechados / stats.total * 100) : 0}% conversão</div></div>
-          <div className="metric-card amber"><div className="label">Ag. contrato</div><div className="font-serif text-3xl text-white">{stats.ag_contrato}</div></div>
-          <div className="metric-card"><div className="label">Encerrados</div><div className="font-serif text-3xl text-white">{stats.encerrados}</div></div>
+          <div className="metric-card"><div className="kpi-label">Total leads</div><div className="kpi-value">{stats.total}</div></div>
+          <div className="metric-card green"><div className="kpi-label">Fechados</div><div className="kpi-value">{stats.fechados}</div><div className="text-xs text-status-green mt-1">{stats.total ? Math.round(stats.fechados / stats.total * 100) : 0}% conversão</div></div>
+          <div className="metric-card amber"><div className="kpi-label">Ag. contrato</div><div className="kpi-value">{stats.ag_contrato}</div></div>
+          <div className="metric-card"><div className="kpi-label">Encerrados</div><div className="kpi-value">{stats.encerrados}</div></div>
         </div>
 
         <button className="btn-primary mb-5" onClick={() => { setInitialForm(emptyForm); setEditingId(null); setShowForm(true) }}>
