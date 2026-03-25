@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
 import { formatDate } from '@/lib/utils'
@@ -17,52 +17,53 @@ const F = ({ label, children }: { label: string; children: React.ReactNode }) =>
   <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
 )
 
-interface DocumentoModalProps {
-  show: boolean
-  form: any
-  setForm: (f: any) => void
-  clientes: any[]
-  processos: any[]
-  saving: boolean
-  onSave: () => void
-  onClose: () => void
-}
+function DocumentoModal({ initialForm, clientes, processos, onClose, onSaved }: any) {
+  const [form, setForm] = useState(initialForm)
+  const [saving, setSaving] = useState(false)
 
-function DocumentoModal({ show, form, setForm, clientes, processos, saving, onSave, onClose }: DocumentoModalProps) {
-  if (!show) return null
+  async function save() {
+    if (!form.nome) { toast.error('Nome obrigatório'); return }
+    setSaving(true)
+    const payload = { ...form, cliente_id: form.cliente_id || null, processo_id: form.processo_id || null, data_documento: form.data_documento || null }
+    const { error } = await supabase.from('documentos').insert(payload)
+    if (error) toast.error('Erro: ' + error.message)
+    else { toast.success('Documento cadastrado!'); onSaved() }
+    setSaving(false)
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6">
+      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-serif text-brand-silver text-lg">Novo documento</h2>
           <button onClick={onClose}><X size={16} className="text-brand-silver/50" /></button>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <F label="Nome *"><input className="input-field" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} /></F>
+          <F label="Nome *"><input className="input-field" value={form.nome} onChange={e => setForm((f: any) => ({ ...f, nome: e.target.value }))} /></F>
           <F label="Tipo">
-            <select className="input-field" value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })}>
+            <select className="input-field" value={form.tipo} onChange={e => setForm((f: any) => ({ ...f, tipo: e.target.value }))}>
               {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </F>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <F label="Cliente">
-            <select className="input-field" value={form.cliente_id} onChange={e => setForm({ ...form, cliente_id: e.target.value })}>
+            <select className="input-field" value={form.cliente_id} onChange={e => setForm((f: any) => ({ ...f, cliente_id: e.target.value }))}>
               <option value="">Nenhum</option>
-              {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
           </F>
           <F label="Processo">
-            <select className="input-field" value={form.processo_id} onChange={e => setForm({ ...form, processo_id: e.target.value })}>
+            <select className="input-field" value={form.processo_id} onChange={e => setForm((f: any) => ({ ...f, processo_id: e.target.value }))}>
               <option value="">Nenhum</option>
-              {processos.map(p => <option key={p.id} value={p.id}>{p.titulo_interno}</option>)}
+              {processos.map((p: any) => <option key={p.id} value={p.id}>{p.titulo_interno}</option>)}
             </select>
           </F>
         </div>
-        <div className="mb-3"><F label="Data do documento"><input className="input-field" type="date" value={form.data_documento} onChange={e => setForm({ ...form, data_documento: e.target.value })} /></F></div>
-        <F label="URL do arquivo (opcional)"><input className="input-field" value={form.arquivo_url} onChange={e => setForm({ ...form, arquivo_url: e.target.value })} placeholder="https://..." /></F>
+        <div className="mb-3"><F label="Data do documento"><input className="input-field" type="date" value={form.data_documento} onChange={e => setForm((f: any) => ({ ...f, data_documento: e.target.value }))} /></F></div>
+        <F label="URL do arquivo (opcional)"><input className="input-field" value={form.arquivo_url} onChange={e => setForm((f: any) => ({ ...f, arquivo_url: e.target.value }))} placeholder="https://..." /></F>
         <div className="flex gap-3 mt-5">
-          <button className="btn-primary flex-1 justify-center" onClick={onSave} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
+          <button className="btn-primary flex-1 justify-center" onClick={save} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
           <button className="btn-primary" onClick={onClose}>Cancelar</button>
         </div>
       </div>
@@ -76,14 +77,10 @@ export default function DocumentosPage() {
   const [processos, setProcessos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<any>(emptyForm)
-  const [saving, setSaving] = useState(false)
   const [busca, setBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState('')
 
-  useEffect(() => { loadData() }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     const [{ data: d }, { data: c }, { data: p }] = await Promise.all([
       supabase.from('documentos').select('*, cliente:clientes(nome), processo:processos(titulo_interno,numero_processo)').order('created_at', { ascending: false }),
@@ -94,23 +91,15 @@ export default function DocumentosPage() {
     setClientes(c || [])
     setProcessos(p || [])
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => { loadData() }, [loadData])
 
   const filtered = docs.filter(d => {
     const mb = !busca || d.nome?.toLowerCase().includes(busca.toLowerCase()) || d.cliente?.nome?.toLowerCase().includes(busca.toLowerCase())
     const mt = !filtroTipo || d.tipo === filtroTipo
     return mb && mt
   })
-
-  async function save() {
-    if (!form.nome) { toast.error('Nome obrigatório'); return }
-    setSaving(true)
-    const payload = { ...form, cliente_id: form.cliente_id || null, processo_id: form.processo_id || null, data_documento: form.data_documento || null }
-    const { error } = await supabase.from('documentos').insert(payload)
-    if (error) toast.error('Erro: ' + error.message)
-    else { toast.success('Documento cadastrado!'); setShowForm(false); loadData() }
-    setSaving(false)
-  }
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
@@ -125,7 +114,7 @@ export default function DocumentosPage() {
             <option value="">Todos os tipos</option>
             {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <button className="btn-primary" onClick={() => { setForm(emptyForm); setShowForm(true) }}><Plus size={13} /> Novo documento</button>
+          <button className="btn-primary" onClick={() => setShowForm(true)}><Plus size={13} /> Novo documento</button>
         </div>
         <div className="card p-0 overflow-hidden">
           <table className="w-full" style={{ tableLayout: 'fixed' }}>
@@ -161,16 +150,15 @@ export default function DocumentosPage() {
           </table>
         </div>
 
-        <DocumentoModal
-          show={showForm}
-          form={form}
-          setForm={setForm}
-          clientes={clientes}
-          processos={processos}
-          saving={saving}
-          onSave={save}
-          onClose={() => setShowForm(false)}
-        />
+        {showForm && (
+          <DocumentoModal
+            initialForm={emptyForm}
+            clientes={clientes}
+            processos={processos}
+            onClose={() => setShowForm(false)}
+            onSaved={() => { setShowForm(false); loadData() }}
+          />
+        )}
       </div>
     </div>
   )

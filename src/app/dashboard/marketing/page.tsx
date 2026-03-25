@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
 import { formatDate, AREAS_DIREITO } from '@/lib/utils'
@@ -17,29 +17,33 @@ const F = ({ label, children }: { label: string; children: React.ReactNode }) =>
   <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
 )
 
-interface MarketingModalProps {
-  show: boolean
-  editingId: string | null
-  form: any
-  setForm: (f: any) => void
-  saving: boolean
-  onSave: () => void
-  onClose: () => void
-}
+function MarketingModal({ editingId, initialForm, onClose, onSaved }: any) {
+  const [form, setForm] = useState(initialForm)
+  const [saving, setSaving] = useState(false)
 
-function MarketingModal({ show, editingId, form, setForm, saving, onSave, onClose }: MarketingModalProps) {
-  if (!show) return null
+  async function save() {
+    if (!form.headline) { toast.error('Headline obrigatória'); return }
+    setSaving(true)
+    const payload = { ...form, data_prevista: form.data_prevista || null }
+    let error
+    if (editingId) { const r = await supabase.from('marketing_conteudos').update(payload).eq('id', editingId); error = r.error }
+    else { const r = await supabase.from('marketing_conteudos').insert(payload); error = r.error }
+    if (error) toast.error('Erro: ' + error.message)
+    else { toast.success('Salvo!'); onSaved() }
+    setSaving(false)
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6">
+      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar conteúdo' : 'Novo conteúdo'}</h2>
           <button onClick={onClose}><X size={16} className="text-brand-silver/50" /></button>
         </div>
-        <div className="mb-3"><F label="Headline *"><input className="input-field" value={form.headline} onChange={e => setForm({ ...form, headline: e.target.value })} placeholder="Título do conteúdo" /></F></div>
+        <div className="mb-3"><F label="Headline *"><input className="input-field" value={form.headline} onChange={e => setForm((f: any) => ({ ...f, headline: e.target.value }))} placeholder="Título do conteúdo" /></F></div>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <F label="Formato">
-            <select className="input-field" value={form.formato} onChange={e => setForm({ ...form, formato: e.target.value })}>
+            <select className="input-field" value={form.formato} onChange={e => setForm((f: any) => ({ ...f, formato: e.target.value }))}>
               <option value="reels">Reels</option>
               <option value="carrossel">Carrossel</option>
               <option value="story">Story</option>
@@ -48,7 +52,7 @@ function MarketingModal({ show, editingId, form, setForm, saving, onSave, onClos
             </select>
           </F>
           <F label="Status">
-            <select className="input-field" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+            <select className="input-field" value={form.status} onChange={e => setForm((f: any) => ({ ...f, status: e.target.value }))}>
               <option value="planejado">Planejado</option>
               <option value="em_producao">Em produção</option>
               <option value="pronto">Pronto</option>
@@ -56,20 +60,20 @@ function MarketingModal({ show, editingId, form, setForm, saving, onSave, onClos
               <option value="cancelado">Cancelado</option>
             </select>
           </F>
-          <F label="Data prevista"><input className="input-field" type="date" value={form.data_prevista} onChange={e => setForm({ ...form, data_prevista: e.target.value })} /></F>
+          <F label="Data prevista"><input className="input-field" type="date" value={form.data_prevista} onChange={e => setForm((f: any) => ({ ...f, data_prevista: e.target.value }))} /></F>
         </div>
         <div className="mb-3">
           <F label="Área do Direito">
-            <select className="input-field" value={form.area_direito} onChange={e => setForm({ ...form, area_direito: e.target.value })}>
+            <select className="input-field" value={form.area_direito} onChange={e => setForm((f: any) => ({ ...f, area_direito: e.target.value }))}>
               <option value="">Geral</option>
               {AREAS_DIREITO.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </F>
         </div>
-        <div className="mb-3"><F label="Legenda"><textarea className="input-field min-h-20 resize-none" value={form.legenda} onChange={e => setForm({ ...form, legenda: e.target.value })} /></F></div>
-        <F label="Roteiro (para Reels)"><textarea className="input-field min-h-20 resize-none" value={form.roteiro} onChange={e => setForm({ ...form, roteiro: e.target.value })} /></F>
+        <div className="mb-3"><F label="Legenda"><textarea className="input-field min-h-20 resize-none" value={form.legenda} onChange={e => setForm((f: any) => ({ ...f, legenda: e.target.value }))} /></F></div>
+        <F label="Roteiro (para Reels)"><textarea className="input-field min-h-20 resize-none" value={form.roteiro} onChange={e => setForm((f: any) => ({ ...f, roteiro: e.target.value }))} /></F>
         <div className="flex gap-3 mt-5">
-          <button className="btn-primary flex-1 justify-center" onClick={onSave} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
+          <button className="btn-primary flex-1 justify-center" onClick={save} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
           <button className="btn-primary" onClick={onClose}>Cancelar</button>
         </div>
       </div>
@@ -82,32 +86,19 @@ export default function MarketingPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState<any>(emptyForm)
-  const [saving, setSaving] = useState(false)
+  const [initialForm, setInitialForm] = useState<any>(emptyForm)
   const [filtro, setFiltro] = useState('todos')
 
-  useEffect(() => { loadData() }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase.from('marketing_conteudos').select('*').order('data_prevista')
     setConteudos(data || [])
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => { loadData() }, [loadData])
 
   const filtered = conteudos.filter(c => filtro === 'todos' ? true : c.status === filtro)
-
-  async function save() {
-    if (!form.headline) { toast.error('Headline obrigatória'); return }
-    setSaving(true)
-    const payload = { ...form, data_prevista: form.data_prevista || null }
-    let error
-    if (editingId) { const r = await supabase.from('marketing_conteudos').update(payload).eq('id', editingId); error = r.error }
-    else { const r = await supabase.from('marketing_conteudos').insert(payload); error = r.error }
-    if (error) toast.error('Erro: ' + error.message)
-    else { toast.success('Salvo!'); setShowForm(false); loadData() }
-    setSaving(false)
-  }
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
@@ -120,7 +111,7 @@ export default function MarketingPage() {
             ))}
           </div>
           <div className="flex-1" />
-          <button className="btn-primary" onClick={() => { setForm(emptyForm); setEditingId(null); setShowForm(true) }}><Plus size={13} /> Novo conteúdo</button>
+          <button className="btn-primary" onClick={() => { setInitialForm(emptyForm); setEditingId(null); setShowForm(true) }}><Plus size={13} /> Novo conteúdo</button>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -146,22 +137,21 @@ export default function MarketingPage() {
                   </div>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => { setForm({ headline: c.headline, legenda: c.legenda || '', roteiro: c.roteiro || '', formato: c.formato, area_direito: c.area_direito || '', status: c.status, data_prevista: c.data_prevista || '', plataforma: c.plataforma || 'instagram', observacoes: c.observacoes || '' }); setEditingId(c.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
+                  <button onClick={() => { setInitialForm({ headline: c.headline, legenda: c.legenda || '', roteiro: c.roteiro || '', formato: c.formato, area_direito: c.area_direito || '', status: c.status, data_prevista: c.data_prevista || '', plataforma: c.plataforma || 'instagram', observacoes: c.observacoes || '' }); setEditingId(c.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
                   <button onClick={async () => { if (confirm('Excluir?')) { await supabase.from('marketing_conteudos').delete().eq('id', c.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/40"><Trash2 size={12} /></button>
                 </div>
               </div>
             ))}
         </div>
 
-        <MarketingModal
-          show={showForm}
-          editingId={editingId}
-          form={form}
-          setForm={setForm}
-          saving={saving}
-          onSave={save}
-          onClose={() => setShowForm(false)}
-        />
+        {showForm && (
+          <MarketingModal
+            editingId={editingId}
+            initialForm={initialForm}
+            onClose={() => setShowForm(false)}
+            onSaved={() => { setShowForm(false); loadData() }}
+          />
+        )}
       </div>
     </div>
   )
