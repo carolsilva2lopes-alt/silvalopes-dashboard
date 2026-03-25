@@ -10,6 +10,112 @@ import toast from 'react-hot-toast'
 
 const emptyForm = { tipo: 'receita', categoria: '', descricao: '', valor: '', data: '', pago: false, cliente_id: '', processo_id: '', tipo_honorario: '', parceiro_nome: '', parceiro_percentual: '', parceiro_valor: '', parceiro_pago: false }
 
+const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
+)
+
+interface LancamentoModalProps {
+  show: boolean
+  editingId: string | null
+  form: any
+  setForm: (f: any) => void
+  clientes: any[]
+  saving: boolean
+  onSave: () => void
+  onClose: () => void
+}
+
+function LancamentoModal({ show, editingId, form, setForm, clientes, saving, onSave, onClose }: LancamentoModalProps) {
+  if (!show) return null
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar lançamento' : 'Novo lançamento'}</h2>
+          <button onClick={onClose}><X size={16} className="text-brand-silver/50" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Tipo">
+            <select className="input-field" value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })}>
+              <option value="receita">Receita</option>
+              <option value="despesa">Despesa</option>
+            </select>
+          </F>
+          <F label="Data *"><input className="input-field" type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} /></F>
+        </div>
+        <div className="mb-3"><F label="Descrição *"><input className="input-field" value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></F></div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Valor (R$) *"><input className="input-field" type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} placeholder="0,00" /></F>
+          <F label="Cliente">
+            <select className="input-field" value={form.cliente_id} onChange={e => setForm({ ...form, cliente_id: e.target.value })}>
+              <option value="">Nenhum</option>
+              {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </F>
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <input type="checkbox" id="pago" checked={form.pago} onChange={e => setForm({ ...form, pago: e.target.checked })} className="accent-brand-silver" />
+          <label htmlFor="pago" className="text-brand-silver/60 text-sm cursor-pointer">Já foi pago</label>
+        </div>
+        <div className="border-t border-brand-silver/8 pt-3 mt-3">
+          <div className="label mb-2">Parceria (opcional)</div>
+          <div className="grid grid-cols-3 gap-3">
+            <F label="Nome do parceiro"><input className="input-field" value={form.parceiro_nome} onChange={e => setForm({ ...form, parceiro_nome: e.target.value })} /></F>
+            <F label="% parceiro"><input className="input-field" type="number" value={form.parceiro_percentual} onChange={e => setForm({ ...form, parceiro_percentual: e.target.value })} /></F>
+            <F label="Valor repasse"><input className="input-field" type="number" step="0.01" value={form.parceiro_valor} onChange={e => setForm({ ...form, parceiro_valor: e.target.value })} /></F>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button className="btn-primary flex-1 justify-center" onClick={onSave} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
+          <button className="btn-primary" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface ReciboModalProps {
+  show: boolean
+  recibo: any
+  setRecibo: (r: any) => void
+  onGerar: () => void
+  onClose: () => void
+}
+
+function ReciboModal({ show, recibo, setRecibo, onGerar, onClose }: ReciboModalProps) {
+  if (!show) return null
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-lg p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-serif text-brand-silver text-lg">Emitir recibo</h2>
+          <button onClick={onClose}><X size={16} className="text-brand-silver/50" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Nome do cliente"><input className="input-field" value={recibo.cliente_nome} onChange={e => setRecibo({ ...recibo, cliente_nome: e.target.value })} /></F>
+          <F label="CPF / CNPJ"><input className="input-field" value={recibo.cpf_cnpj} onChange={e => setRecibo({ ...recibo, cpf_cnpj: e.target.value })} /></F>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <F label="Valor (R$)"><input className="input-field" type="number" step="0.01" value={recibo.valor} onChange={e => setRecibo({ ...recibo, valor: e.target.value })} /></F>
+          <F label="Data"><input className="input-field" type="date" value={recibo.data} onChange={e => setRecibo({ ...recibo, data: e.target.value })} /></F>
+        </div>
+        <div className="mb-3"><F label="Descrição"><input className="input-field" value={recibo.descricao} onChange={e => setRecibo({ ...recibo, descricao: e.target.value })} placeholder="Honorários advocatícios — proc. nº..." /></F></div>
+        <div className="mb-3">
+          <F label="Forma de pagamento">
+            <select className="input-field" value={recibo.tipo_pagamento} onChange={e => setRecibo({ ...recibo, tipo_pagamento: e.target.value })}>
+              <option>PIX</option><option>Transferência</option><option>Dinheiro</option><option>Boleto</option>
+            </select>
+          </F>
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button className="btn-primary flex-1 justify-center" onClick={onGerar}><FileText size={13} /> Gerar recibo</button>
+          <button className="btn-primary" onClick={onClose}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function FinanceiroPage() {
   const [lancamentos, setLancamentos] = useState<any[]>([])
   const [clientes, setClientes] = useState<any[]>([])
@@ -71,8 +177,6 @@ export default function FinanceiroPage() {
     setShowRecibo(false)
   }
 
-  const F = ({ label, children }: any) => (<div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>)
-
   return (
     <div className="flex flex-col flex-1 overflow-auto">
       <Topbar title="Financeiro" />
@@ -90,107 +194,65 @@ export default function FinanceiroPage() {
         </div>
 
         <div className="card p-0 overflow-hidden">
-          <table className="w-full" style={{tableLayout:'fixed'}}>
+          <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="border-b border-brand-silver/8">
-                <th className="table-header" style={{width:'20%'}}>Cliente</th>
-                <th className="table-header" style={{width:'24%'}}>Descrição</th>
-                <th className="table-header" style={{width:'8%'}}>Tipo</th>
-                <th className="table-header" style={{width:'13%'}}>Valor</th>
-                <th className="table-header" style={{width:'11%'}}>Data</th>
-                <th className="table-header" style={{width:'12%'}}>Status</th>
-                <th className="table-header" style={{width:'6%'}}>Parceria</th>
-                <th className="table-header" style={{width:'6%'}}></th>
+                <th className="table-header" style={{ width: '20%' }}>Cliente</th>
+                <th className="table-header" style={{ width: '24%' }}>Descrição</th>
+                <th className="table-header" style={{ width: '8%' }}>Tipo</th>
+                <th className="table-header" style={{ width: '13%' }}>Valor</th>
+                <th className="table-header" style={{ width: '11%' }}>Data</th>
+                <th className="table-header" style={{ width: '12%' }}>Status</th>
+                <th className="table-header" style={{ width: '6%' }}>Parceria</th>
+                <th className="table-header" style={{ width: '6%' }}></th>
               </tr>
             </thead>
             <tbody>
               {loading ? <tr><td colSpan={8} className="table-cell text-center text-brand-silver/30 py-8">Carregando...</td></tr>
-              : lancamentos.length === 0 ? <tr><td colSpan={8} className="table-cell text-center text-brand-silver/30 py-8">Nenhum lançamento cadastrado.</td></tr>
-              : lancamentos.map(l => (
-                <tr key={l.id} className="table-row">
-                  <td className="table-cell text-white text-xs truncate">{l.cliente?.nome || '—'}</td>
-                  <td className="table-cell text-brand-silver/60 text-xs truncate">{l.descricao}</td>
-                  <td className="table-cell"><span className={`badge text-xs ${l.tipo === 'receita' ? 'text-status-green border-status-green/25' : 'text-status-red border-status-red/25'}`}>{l.tipo}</span></td>
-                  <td className="table-cell text-white text-xs font-medium">{formatCurrency(l.valor)}</td>
-                  <td className="table-cell text-brand-silver/50 text-xs">{formatDate(l.data)}</td>
-                  <td className="table-cell">
-                    <button onClick={() => togglePago(l)} className={`badge text-xs cursor-pointer ${l.pago ? 'text-status-green border-status-green/25 bg-status-green/7' : 'text-status-amber border-status-amber/25 bg-status-amber/7'}`}>
-                      {l.pago ? 'Pago' : 'Pendente'}
-                    </button>
-                  </td>
-                  <td className="table-cell text-xs">{l.parceiro_nome ? <span className="badge text-status-amber border-status-amber/25 text-xs">Sim</span> : <span className="text-brand-silver/25">—</span>}</td>
-                  <td className="table-cell">
-                    <div className="flex gap-1">
-                      <button onClick={() => { setForm({tipo:l.tipo,categoria:l.categoria||'',descricao:l.descricao,valor:String(l.valor),data:l.data,pago:l.pago,cliente_id:l.cliente_id||'',processo_id:l.processo_id||'',tipo_honorario:l.tipo_honorario||'',parceiro_nome:l.parceiro_nome||'',parceiro_percentual:l.parceiro_percentual?String(l.parceiro_percentual):'',parceiro_valor:l.parceiro_valor?String(l.parceiro_valor):'',parceiro_pago:l.parceiro_pago||false}); setEditingId(l.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
-                      <button onClick={async () => { if(confirm('Excluir?')) { await supabase.from('financeiro').delete().eq('id',l.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/40"><Trash2 size={12} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                : lancamentos.length === 0 ? <tr><td colSpan={8} className="table-cell text-center text-brand-silver/30 py-8">Nenhum lançamento cadastrado.</td></tr>
+                : lancamentos.map(l => (
+                  <tr key={l.id} className="table-row">
+                    <td className="table-cell text-white text-xs truncate">{l.cliente?.nome || '—'}</td>
+                    <td className="table-cell text-brand-silver/60 text-xs truncate">{l.descricao}</td>
+                    <td className="table-cell"><span className={`badge text-xs ${l.tipo === 'receita' ? 'text-status-green border-status-green/25' : 'text-status-red border-status-red/25'}`}>{l.tipo}</span></td>
+                    <td className="table-cell text-white text-xs font-medium">{formatCurrency(l.valor)}</td>
+                    <td className="table-cell text-brand-silver/50 text-xs">{formatDate(l.data)}</td>
+                    <td className="table-cell">
+                      <button onClick={() => togglePago(l)} className={`badge text-xs cursor-pointer ${l.pago ? 'text-status-green border-status-green/25 bg-status-green/7' : 'text-status-amber border-status-amber/25 bg-status-amber/7'}`}>
+                        {l.pago ? 'Pago' : 'Pendente'}
+                      </button>
+                    </td>
+                    <td className="table-cell text-xs">{l.parceiro_nome ? <span className="badge text-status-amber border-status-amber/25 text-xs">Sim</span> : <span className="text-brand-silver/25">—</span>}</td>
+                    <td className="table-cell">
+                      <div className="flex gap-1">
+                        <button onClick={() => { setForm({ tipo: l.tipo, categoria: l.categoria || '', descricao: l.descricao, valor: String(l.valor), data: l.data, pago: l.pago, cliente_id: l.cliente_id || '', processo_id: l.processo_id || '', tipo_honorario: l.tipo_honorario || '', parceiro_nome: l.parceiro_nome || '', parceiro_percentual: l.parceiro_percentual ? String(l.parceiro_percentual) : '', parceiro_valor: l.parceiro_valor ? String(l.parceiro_valor) : '', parceiro_pago: l.parceiro_pago || false }); setEditingId(l.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
+                        <button onClick={async () => { if (confirm('Excluir?')) { await supabase.from('financeiro').delete().eq('id', l.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/40"><Trash2 size={12} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
 
-        {showForm && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if(e.target === e.currentTarget) setShowForm(false) }} onMouseDown={e => e.stopPropagation()}>
-            <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-xl p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-serif text-brand-silver text-lg">{editingId ? 'Editar lançamento' : 'Novo lançamento'}</h2>
-                <button onClick={() => setShowForm(false)}><X size={16} className="text-brand-silver/50" /></button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Tipo"><select className="input-field" value={form.tipo} onChange={e => setForm({...form,tipo:e.target.value})}><option value="receita">Receita</option><option value="despesa">Despesa</option></select></F>
-                <F label="Data *"><input className="input-field" type="date" value={form.data} onChange={e => setForm({...form,data:e.target.value})} /></F>
-              </div>
-              <div className="mb-3"><F label="Descrição *"><input className="input-field" value={form.descricao} onChange={e => setForm({...form,descricao:e.target.value})} /></F></div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Valor (R$) *"><input className="input-field" type="number" step="0.01" value={form.valor} onChange={e => setForm({...form,valor:e.target.value})} placeholder="0,00" /></F>
-                <F label="Cliente"><select className="input-field" value={form.cliente_id} onChange={e => setForm({...form,cliente_id:e.target.value})}><option value="">Nenhum</option>{clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></F>
-              </div>
-              <div className="flex items-center gap-3 mb-3">
-                <input type="checkbox" id="pago" checked={form.pago} onChange={e => setForm({...form,pago:e.target.checked})} className="accent-brand-silver" />
-                <label htmlFor="pago" className="text-brand-silver/60 text-sm cursor-pointer">Já foi pago</label>
-              </div>
-              <div className="border-t border-brand-silver/8 pt-3 mt-3">
-                <div className="label mb-2">Parceria (opcional)</div>
-                <div className="grid grid-cols-3 gap-3">
-                  <F label="Nome do parceiro"><input className="input-field" value={form.parceiro_nome} onChange={e => setForm({...form,parceiro_nome:e.target.value})} /></F>
-                  <F label="% parceiro"><input className="input-field" type="number" value={form.parceiro_percentual} onChange={e => setForm({...form,parceiro_percentual:e.target.value})} /></F>
-                  <F label="Valor repasse"><input className="input-field" type="number" step="0.01" value={form.parceiro_valor} onChange={e => setForm({...form,parceiro_valor:e.target.value})} /></F>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-5">
-                <button className="btn-primary flex-1 justify-center" onClick={save} disabled={saving}><Save size={13} /> {saving ? 'Salvando...' : 'Salvar'}</button>
-                <button className="btn-primary" onClick={() => setShowForm(false)}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <LancamentoModal
+          show={showForm}
+          editingId={editingId}
+          form={form}
+          setForm={setForm}
+          clientes={clientes}
+          saving={saving}
+          onSave={save}
+          onClose={() => setShowForm(false)}
+        />
 
-        {showRecibo && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if(e.target === e.currentTarget) setShowRecibo(false) }}>
-            <div className="bg-brand-surface border border-brand-silver/15 w-full max-w-lg p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-serif text-brand-silver text-lg">Emitir recibo</h2>
-                <button onClick={() => setShowRecibo(false)}><X size={16} className="text-brand-silver/50" /></button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Nome do cliente"><input className="input-field" value={recibo.cliente_nome} onChange={e => setRecibo({...recibo,cliente_nome:e.target.value})} /></F>
-                <F label="CPF / CNPJ"><input className="input-field" value={recibo.cpf_cnpj} onChange={e => setRecibo({...recibo,cpf_cnpj:e.target.value})} /></F>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <F label="Valor (R$)"><input className="input-field" type="number" step="0.01" value={recibo.valor} onChange={e => setRecibo({...recibo,valor:e.target.value})} /></F>
-                <F label="Data"><input className="input-field" type="date" value={recibo.data} onChange={e => setRecibo({...recibo,data:e.target.value})} /></F>
-              </div>
-              <div className="mb-3"><F label="Descrição"><input className="input-field" value={recibo.descricao} onChange={e => setRecibo({...recibo,descricao:e.target.value})} placeholder="Honorários advocatícios — proc. nº..." /></F></div>
-              <div className="mb-3"><F label="Forma de pagamento"><select className="input-field" value={recibo.tipo_pagamento} onChange={e => setRecibo({...recibo,tipo_pagamento:e.target.value})}><option>PIX</option><option>Transferência</option><option>Dinheiro</option><option>Boleto</option></select></F></div>
-              <div className="flex gap-3 mt-5">
-                <button className="btn-primary flex-1 justify-center" onClick={gerarRecibo}><FileText size={13} /> Gerar recibo</button>
-                <button className="btn-primary" onClick={() => setShowRecibo(false)}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ReciboModal
+          show={showRecibo}
+          recibo={recibo}
+          setRecibo={setRecibo}
+          onGerar={gerarRecibo}
+          onClose={() => setShowRecibo(false)}
+        />
       </div>
     </div>
   )
