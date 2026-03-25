@@ -51,7 +51,7 @@ function ClienteModal({ editingId, initialForm, onClose, onSaved, clientes }: an
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <F label={form.tipo === 'pj' ? 'Razão Social *' : 'Nome completo *'}>
-            <input className="input-field" value={form.nome} onChange={e => set('nome', e.target.value)} placeholder="Nome completo" autoFocus />
+            <input className="input-field" value={form.nome} onChange={e => set('nome', e.target.value)} placeholder="Nome completo" />
           </F>
           {form.tipo === 'pf' ? (
             <F label="Data de nascimento"><input className="input-field" type="date" value={form.data_nascimento} onChange={e => set('data_nascimento', e.target.value)} /></F>

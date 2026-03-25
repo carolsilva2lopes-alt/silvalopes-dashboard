@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Topbar from '@/components/layout/Topbar'
 import { formatCurrency, formatDate, getAreaColor } from '@/lib/utils'
-import { AlertTriangle, TrendingUp, Users, FileText, DollarSign, Clock, Calendar, CheckSquare } from 'lucide-react'
+import { AlertTriangle, TrendingUp, Users, FileText, DollarSign, Clock, Calendar, CheckSquare, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 interface Stats {
@@ -38,6 +38,7 @@ export default function PainelPage() {
   const [alertas, setAlertas] = useState<any[]>([])
   const [prazosUrgentes, setPrazosUrgentes] = useState<any[]>([])
   const [audienciasProximas, setAudienciasProximas] = useState<any[]>([])
+  const [porEstado, setPorEstado] = useState<{uf: string, total: number}[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function PainelPage() {
         { data: processosRecentes },
         { data: prazosData },
         { data: audienciasData },
+        { data: estadosData },
       ] = await Promise.all([
         supabase.from('processos').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
         supabase.from('processos').select('*', { count: 'exact', head: true }).neq('status', 'ativo'),
@@ -70,6 +72,7 @@ export default function PainelPage() {
         supabase.from('processos').select('*, processo_clientes(cliente:clientes(nome))').order('created_at', { ascending: false }).limit(5),
         supabase.from('prazos').select('*, processo:processos(titulo_interno, numero_processo)').eq('status', 'pendente').order('data').limit(5),
         supabase.from('audiencias').select('*, processo:processos(titulo_interno)').eq('status', 'agendada').gte('data', new Date().toISOString().split('T')[0]).order('data').limit(4),
+        supabase.from('processos').select('estado'),
       ])
 
       const receitas = financeiroData?.filter(f => f.tipo === 'receita') || []
@@ -92,6 +95,10 @@ export default function PainelPage() {
       setProcessos(processosRecentes || [])
       setPrazosUrgentes(prazosData || [])
       setAudienciasProximas(audienciasData || [])
+      const contagem: Record<string, number> = {}
+      estadosData?.forEach((p: any) => { if (p.estado) contagem[p.estado] = (contagem[p.estado] || 0) + 1 })
+      const sorted = Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([uf, total]) => ({ uf, total }))
+      setPorEstado(sorted)
     } catch (error) {
       console.error('Erro ao carregar painel:', error)
     } finally {
@@ -196,6 +203,38 @@ export default function PainelPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Mapa de atuação */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MapPin size={13} className="text-brand-silver/50" />
+              <div className="text-brand-silver text-xs font-medium tracking-wide">Mapa de Atuação Nacional</div>
+            </div>
+            <Link href="/dashboard/mapa" className="text-brand-silver/35 text-xs uppercase tracking-wider hover:text-brand-silver transition-colors">Ver mapa completo</Link>
+          </div>
+          {loading ? (
+            <div className="text-brand-silver/30 text-xs py-3 text-center">Carregando...</div>
+          ) : porEstado.length === 0 ? (
+            <div className="text-brand-silver/30 text-xs py-3 text-center">Nenhum processo com estado definido.</div>
+          ) : (
+            <div className="grid grid-cols-6 gap-2">
+              {porEstado.map(({ uf, total }) => {
+                const max = porEstado[0]?.total || 1
+                const pct = Math.round((total / max) * 100)
+                return (
+                  <div key={uf} className="flex flex-col items-center gap-1.5 p-2 bg-brand-dark">
+                    <div className="text-white text-xs font-medium">{uf}</div>
+                    <div className="w-full h-1 bg-brand-silver/10">
+                      <div className="h-full bg-brand-silver/60 transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="text-brand-silver/40 text-xs">{total}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Linha inferior */}
