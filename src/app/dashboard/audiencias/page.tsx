@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { Plus, X, Save, Edit2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const emptyForm = { tipo: '', data: '', hora: '', local: '', processo_id: '', cliente_id: '', responsavel: 'Carol Silva Lopes', status: 'agendada', observacoes: '' }
+const emptyForm = { tipo: '', data: '', hora: '', local: '', processo_id: '', cliente_id: '', responsavel: 'Anna Carolyne Silva Lopes', status: 'agendada', observacoes: '' }
 
 const statusColor: Record<string, string> = {
   agendada: 'text-status-green border-status-green/25 bg-status-green/7',
@@ -144,7 +144,7 @@ export default function AudienciasPage() {
                     <td className="table-cell"><span className={`badge text-xs ${statusColor[a.status] || ''}`}>{a.status}</span></td>
                     <td className="table-cell">
                       <div className="flex gap-1">
-                        <button onClick={() => { setInitialForm({ tipo: a.tipo, data: a.data, hora: a.hora || '', local: a.local || '', processo_id: a.processo_id || '', cliente_id: a.cliente_id || '', responsavel: a.responsavel || 'Carol Silva Lopes', status: a.status, observacoes: a.observacoes || '' }); setEditingId(a.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
+                        <button onClick={() => { setInitialForm({ tipo: a.tipo, data: a.data, hora: a.hora || '', local: a.local || '', processo_id: a.processo_id || '', cliente_id: a.cliente_id || '', responsavel: a.responsavel || 'Anna Carolyne Silva Lopes', status: a.status, observacoes: a.observacoes || '' }); setEditingId(a.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
                         <button onClick={async () => { if (confirm('Excluir?')) { await supabase.from('audiencias').delete().eq('id', a.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/40"><Trash2 size={12} /></button>
                       </div>
                     </td>

@@ -102,7 +102,7 @@ export default function Sidebar() {
             CL
           </div>
           <div>
-            <div className="text-brand-silver/60 text-xs">Carol Silva Lopes</div>
+            <div className="text-brand-silver/60 text-xs">Anna Carolyne Silva Lopes</div>
             <div className="text-brand-silver/25 leading-tight" style={{fontSize:'9px', letterSpacing:'0.5px'}}>OAB/GO 56.972</div>
           </div>
         </div>

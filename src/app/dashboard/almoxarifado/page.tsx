@@ -55,7 +55,7 @@ function ItemModal({ editingId, initialForm, onClose, onSaved }: any) {
 }
 
 function MovimentacaoModal({ item, tipoInicial, onClose, onSaved }: any) {
-  const [movimento, setMovimento] = useState({ tipo: tipoInicial || 'entrada', quantidade: '1', responsavel: 'Carol Silva Lopes', observacoes: '' })
+  const [movimento, setMovimento] = useState({ tipo: tipoInicial || 'entrada', quantidade: '1', responsavel: 'Anna Carolyne Silva Lopes', observacoes: '' })
   const [saving, setSaving] = useState(false)
 
   async function save() {

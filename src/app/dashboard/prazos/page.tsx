@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { Plus, X, Save, Edit2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const emptyForm = { descricao: '', data: '', hora: '', processo_id: '', cliente_id: '', responsavel: 'Carol Silva Lopes', status: 'pendente', observacoes: '' }
+const emptyForm = { descricao: '', data: '', hora: '', processo_id: '', cliente_id: '', responsavel: 'Anna Carolyne Silva Lopes', status: 'pendente', observacoes: '' }
 
 const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
@@ -178,7 +178,7 @@ export default function PrazosPage() {
                     </td>
                     <td className="table-cell">
                       <div className="flex gap-1">
-                        <button onClick={() => { setInitialForm({ descricao: p.descricao, data: p.data, hora: p.hora || '', processo_id: p.processo_id || '', cliente_id: p.cliente_id || '', responsavel: p.responsavel || 'Carol Silva Lopes', status: p.status, observacoes: p.observacoes || '' }); setEditingId(p.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
+                        <button onClick={() => { setInitialForm({ descricao: p.descricao, data: p.data, hora: p.hora || '', processo_id: p.processo_id || '', cliente_id: p.cliente_id || '', responsavel: p.responsavel || 'Anna Carolyne Silva Lopes', status: p.status, observacoes: p.observacoes || '' }); setEditingId(p.id); setShowForm(true) }} className="p-1 hover:text-brand-silver text-brand-silver/40"><Edit2 size={12} /></button>
                         <button onClick={async () => { if (confirm('Excluir este prazo?')) { await supabase.from('prazos').delete().eq('id', p.id); loadData() } }} className="p-1 hover:text-status-red text-brand-silver/40"><Trash2 size={12} /></button>
                       </div>
                     </td>
