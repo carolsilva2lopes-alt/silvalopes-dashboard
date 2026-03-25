@@ -16,6 +16,10 @@ const emptyForm = {
   parceria: false, advogado_parceiro: '', percentual_parceiro: '', observacoes: '',
 }
 
+const F = ({ label, children }: any) => (
+  <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
+)
+
 function ClienteModal({ editingId, initialForm, onClose, onSaved, clientes }: any) {
   const [form, setForm] = useState(initialForm)
   const [saving, setSaving] = useState(false)
@@ -33,10 +37,6 @@ function ClienteModal({ editingId, initialForm, onClose, onSaved, clientes }: an
     else { toast.success(editingId ? 'Cliente atualizado!' : 'Cliente cadastrado!'); onSaved() }
     setSaving(false)
   }
-
-  const F = ({ label, children }: any) => (
-    <div className="flex flex-col gap-1"><label className="label">{label}</label>{children}</div>
-  )
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto" onClick={e => { if(e.target === e.currentTarget) onClose() }}>
